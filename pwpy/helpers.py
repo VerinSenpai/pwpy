@@ -13,7 +13,7 @@ async def within_war_range(
     :param powered: Whether to discriminate against unpowered cities. Defaults to True.
     :return: A list of nations that fall within the provided search criteria.
     """
-    min_score, max_score = calc.offensive_score_range(score)
+    min_score, max_score = calc.score_range(score)
     query = f"""
     nations(first: 100, min_score: {min_score}, max_score: {max_score}, alliance_id: {alliance}, vmode: false) {{
         data {{
