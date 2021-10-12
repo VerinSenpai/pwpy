@@ -1,3 +1,5 @@
+from pwpy import exceptions
+
 import aiohttp
 
 
@@ -28,5 +30,9 @@ async def send_message(
     }
 
     async with aiohttp.ClientSession() as session:
-        await session.post(login_url, data=login_data)
+        response = await session.post(login_url, data=login_data)
+
+        if "Login Successful" not in str(await response.read()):
+            raise exceptions.LoginFailure("The provided login credentials were invalid!")
+
         await session.post(message_url, data=message_data)
