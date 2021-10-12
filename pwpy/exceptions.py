@@ -17,3 +17,9 @@ class UnexpectedResponse(BaseException):
 
     def __init__(self, response: str) -> None:
         self.response = response
+
+
+class LoginFailure(BaseException):
+    """
+    Exception raised when the provided login credentials are invalid.
+    """
