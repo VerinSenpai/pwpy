@@ -107,4 +107,4 @@ def city_cost(city: int, *, multiplier: float = 1) -> float:
         raise ValueError("The provided value cannot be less than or equal to 1.")
 
     city -= 1
-    return 50000 * (city - 1) ^ 3 + 150000 * city + 75000
+    return 50000 * math.pow((city - 1), 3) + 150000 * city + 75000
