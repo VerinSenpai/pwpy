@@ -41,8 +41,8 @@ async def fetch_query(key: str, query: str, variables: dict = None) -> dict:
         response = await session.post(url, json={"query": "{" + query + "}"})
         data = await response.json()
 
-    if "errors" in data.keys():
-        for error in data["errors"]:
+    if isinstance(data, list):
+        for error in data[0]["errors"]:
             message = error["message"]
 
             if "invalid api_key" in message:
