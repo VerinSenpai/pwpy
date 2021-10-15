@@ -47,7 +47,7 @@ def infra_cost(starting_infra: int, ending_infra: int, *, multiplier: float = 1)
     :return: The cost to purchase or sell infrastructure.
     """
     def unit_cost(amount: int):
-        return (math.pow(abs(amount - 10), 2.2) / 710) + 300
+        return ((abs(amount - 10) ** 2.2) / 710) + 300
 
     difference = ending_infra - starting_infra
     cost = 0
@@ -55,13 +55,19 @@ def infra_cost(starting_infra: int, ending_infra: int, *, multiplier: float = 1)
     if difference < 0:
         return 150 * difference
 
+    if difference > 100 and difference % 100 != 0:
+        delta = difference % 100
+        cost += (round(unit_cost(starting_infra), 2) * delta)
+        starting_infra += delta
+        difference -= delta
+
     for _ in range(math.floor(difference // 100)):
         cost += round(unit_cost(starting_infra), 2) * 100
         starting_infra += 100
         difference -= 100
 
     if difference:
-        cost += round(unit_cost(starting_infra), 2) * (difference % 100)
+        cost += (round(unit_cost(starting_infra), 2) * difference)
 
     return cost
 
@@ -84,13 +90,19 @@ def land_cost(starting_land: int, ending_land: int, *, multiplier: float = 1) ->
     if difference < 0:
         return 50 * difference
 
+    if difference > 500 and difference % 500 != 0:
+        delta = difference % 500
+        cost += round(unit_cost(starting_land), 2) * delta
+        starting_land += delta
+        difference -= delta
+
     for _ in range(math.floor(difference // 500)):
         cost += round(unit_cost(starting_land), 2) * 500
         starting_land += 500
         difference -= 500
 
     if difference:
-        cost += round(unit_cost(starting_land), 2) * (difference % 500)
+        cost += (round(unit_cost(starting_land), 2) * difference)
 
     return cost
 
@@ -107,4 +119,4 @@ def city_cost(city: int, *, multiplier: float = 1) -> float:
         raise ValueError("The provided value cannot be less than or equal to 1.")
 
     city -= 1
-    return 50000 * math.pow((city - 1), 3) + 150000 * city + 75000
+    return (50000 * math.pow((city - 1), 3) + 150000 * city + 75000) * multiplier
