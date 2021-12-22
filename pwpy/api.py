@@ -90,8 +90,8 @@ class BulkQueryHandler:
 
 
 async def within_war_range(
-    key: str, score: int, *, alliance: int = 0, powered: bool = True
-) -> None:
+        key: str, score: int, *, alliance: int = 0, powered: bool = True
+) -> list:
     """
     Lookup all targets for a given score within an optional target alliance.
 
@@ -123,6 +123,9 @@ async def within_war_range(
             cities {{
                 powered
             }}
+            offensive_wars {{
+                id
+            }}
             defensive_wars {{
                 id
             }}
@@ -136,13 +139,12 @@ async def within_war_range(
         if len(nation["defensive_wars"]) > 3:
             nations.remove(nation)
 
-        if not powered:
-            continue
+        elif powered:
+            for city in nation["cities"]:
+                if city["powered"]:
+                    continue
 
-        for city in nation["cities"]:
-            if city["powered"]:
-                continue
-            nations.remove(nation)
-            break
+                nations.remove(nation)
+                break
 
     return nations
