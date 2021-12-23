@@ -23,8 +23,9 @@
 
 from . import api
 from . import scraper
-from . import calc
+from . import utils
+from . import exceptions
 
 
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 __author__ = "God Empress Verin"
