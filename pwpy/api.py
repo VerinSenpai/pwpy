@@ -90,7 +90,7 @@ class BulkQueryHandler:
 
 
 async def within_war_range(
-        key: str, score: int, *, alliance: int = 0, powered: bool = True
+        key: str, score: int, *, alliance: int = None, powered: bool = True
 ) -> list:
     """
     Lookup all targets for a given score within an optional target alliance.
@@ -102,8 +102,11 @@ async def within_war_range(
     :return: A list of nations that fall within the provided search criteria.
     """
     min_score, max_score = utils.score_range(score)
+
+    alliance_query = f"alliance_id: {alliance}" if alliance else ""
+
     query = f"""
-    nations(first: 100, min_score: {min_score}, max_score: {max_score}, alliance_id: {alliance}, vmode: false) {{
+    nations(first: 100, min_score: {min_score}, max_score: {max_score}, {alliance_query}, vmode: false) {{
         data {{
             id
             nation_name
