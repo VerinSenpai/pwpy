@@ -99,6 +99,7 @@ async def within_war_range(
     :param score: Score to be calculated with.
     :param alliance: Target alliance to narrow the search. Defaults to 0.
     :param powered: Whether to discriminate against unpowered cities. Defaults to True.
+    :param omit_alliance: An alliance to be omitted from search results.
     :return: A list of nations that fall within the provided search criteria.
     """
     min_score, max_score = utils.score_range(score)
@@ -149,7 +150,7 @@ async def within_war_range(
     response = await fetch_query(key, query)
     nations = response["nations"]["data"]
 
-    for nation in nations:
+    for nation in nations[::]:
         ongoing = utils.sort_ongoing_wars(nation["defensive_wars"])
         if nation["alliance_id"] == omit_alliance:
             nations.remove(nation)
