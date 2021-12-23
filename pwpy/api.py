@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 
-from pwpy import exceptions, calc
+from pwpy import exceptions, utils
 
 import aiohttp
 
@@ -101,7 +101,7 @@ async def within_war_range(
     :param powered: Whether to discriminate against unpowered cities. Defaults to True.
     :return: A list of nations that fall within the provided search criteria.
     """
-    min_score, max_score = calc.score_range(score)
+    min_score, max_score = utils.score_range(score)
     query = f"""
     nations(first: 100, min_score: {min_score}, max_score: {max_score}, alliance_id: {alliance}, vmode: false) {{
         data {{
@@ -136,7 +136,8 @@ async def within_war_range(
     nations = response["nations"]["data"]
 
     for nation in nations:
-        if len(nation["defensive_wars"]) > 3:
+        ongoing = utils.sort_ongoing_wars(nation["defensive_wars"])
+        if len(ongoing) == 3:
             nations.remove(nation)
 
         elif powered:
