@@ -90,7 +90,7 @@ class BulkQueryHandler:
 
 
 async def within_war_range(
-        key: str, score: int, *, alliance: int = None, powered: bool = True
+        key: str, score: int, *, alliance: int = None, powered: bool = True, omit_alliance: int = None
 ) -> list:
     """
     Lookup all targets for a given score within an optional target alliance.
@@ -103,7 +103,7 @@ async def within_war_range(
     """
     min_score, max_score = utils.score_range(score)
 
-    alliance_query = f"alliance_id: {alliance}" if alliance else ""
+    alliance_query = f"alliance_id: {alliance}" if alliance is not None else ""
 
     query = f"""
     nations(first: 100, min_score: {min_score}, max_score: {max_score}, {alliance_query}, vmode: false) {{
@@ -145,12 +145,16 @@ async def within_war_range(
         }}
     }}
     """
+
     response = await fetch_query(key, query)
     nations = response["nations"]["data"]
 
     for nation in nations:
         ongoing = utils.sort_ongoing_wars(nation["defensive_wars"])
-        if len(ongoing) == 3:
+        if nation["alliance_id"] == omit_alliance:
+            nations.remove(nation)
+
+        elif len(ongoing) == 3:
             nations.remove(nation)
 
         elif powered:
