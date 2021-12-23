@@ -155,6 +155,9 @@ async def within_war_range(
         if nation["alliance_id"] == omit_alliance:
             nations.remove(nation)
 
+        elif nation["color"] == "beige":
+            nations.remove(nation)
+
         elif len(ongoing) == 3:
             nations.remove(nation)
 
