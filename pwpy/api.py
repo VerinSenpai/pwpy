@@ -112,6 +112,7 @@ async def within_war_range(
             id
             nation_name
             leader_name
+            color
             alliance_id
             alliance_position
             alliance {{
