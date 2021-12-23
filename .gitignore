@@ -2,3 +2,5 @@
 test.py
 *.pyc
 .idea/
+dist/
+pwpy.egg-info/
