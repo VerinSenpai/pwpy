@@ -109,6 +109,11 @@ async def within_war_range(
             nation_name
             leader_name
             alliance_id
+            alliance_position
+            alliance {{
+                name
+                score
+            }}
             warpolicy
             flag
             num_cities
