@@ -110,6 +110,7 @@ async def within_war_range(
             leader_name
             alliance_id
             warpolicy
+            flag
             num_cities
             score
             espionage_available
@@ -125,9 +126,13 @@ async def within_war_range(
             }}
             offensive_wars {{
                 id
+                winner
+                turnsleft
             }}
             defensive_wars {{
                 id
+                winner
+                turnsleft
             }}
         }}
     }}
