@@ -171,3 +171,59 @@ async def within_war_range(
                 break
 
     return nations
+
+
+async def bank_info(key: str, alliance: int) -> dict:
+    query = f"""
+      alliances(id:{alliance}, first:1) {{
+        data {{
+          money
+          coal
+          uranium
+          iron
+          bauxite
+          steel
+          gasoline
+          munitions
+          oil
+          food
+          aluminum
+        }}
+      }}
+    """
+
+    response = await fetch_query(key, query)
+    return response["alliances"]["data"]
+
+
+async def bank_records(key: str, alliance: int) -> dict:
+    query = f"""
+         alliances(id:{alliance}, first:1){{
+            data{{
+              bankrecs{{
+                id
+                note
+                pid
+                sid
+                rid
+                stype
+                rtype
+                money
+                coal
+                uranium
+                iron
+                bauxite
+                steel
+                gasoline
+                munitions
+                oil
+                food
+                aluminum
+              }}
+            }}
+          }}
+        }}
+    """
+
+    response = await fetch_query(key, query)
+    return response["alliances"]["data"]["bankrecs"]
