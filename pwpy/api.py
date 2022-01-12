@@ -173,7 +173,7 @@ async def within_war_range(
     return nations
 
 
-async def alliance_info(key: str, alliance) -> dict:
+async def alliance_info(key: str, alliance: int) -> dict:
     query = f"""
          alliances(id:{alliance}, first:1){{
             data{{
@@ -284,7 +284,7 @@ async def alliance_tax_records(key: str, alliance: int) -> dict:
     return response["alliances"]["data"]["taxrecs"]
 
 
-async def alliance_treaties(key: str, alliance) -> dict:
+async def alliance_treaties(key: str, alliance: int) -> dict:
     query = f"""
          alliances(id:{alliance}, first:1){{
             data{{
