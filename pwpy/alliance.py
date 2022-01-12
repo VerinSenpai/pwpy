@@ -18,9 +18,9 @@
 from api import fetch_query
 
 
-def bank_info(aa_id, key):
+async def bank_info(key: str, alliance: int) -> dict:
     query = f"""
-      alliances(id:{aa_id}, first:1) {{
+      alliances(id:{alliance}, first:1) {{
         data {{
           money
           coal
@@ -39,3 +39,36 @@ def bank_info(aa_id, key):
 
     response = await fetch_query(key, query)
     return response["alliances"]["data"]
+
+
+async def bank_records(key: str, alliance: int) -> dict:
+    query = f"""
+         alliances(id:{alliance}, first:1){{
+            data{{
+              bankrecs{{
+                id
+                note
+                pid
+                sid
+                rid
+                stype
+                rtype
+                money
+                coal
+                uranium
+                iron
+                bauxite
+                steel
+                gasoline
+                munitions
+                oil
+                food
+                aluminum
+              }}
+            }}
+          }}
+        }}
+    """
+
+    response = await fetch_query(key, query)
+    return response["alliances"]["data"]["bankrecs"]
