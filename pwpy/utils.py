@@ -34,7 +34,12 @@ def score_range(score: float) -> typing.Tuple[float, float]:
 def max_military(cities: int) -> typing.Tuple[int, int, int, int]:
     """
     Calculate the max military for a given city count.
+
+    :param cities: A city count to be used for the calculation.
     """
+    if cities < 1:
+        raise ValueError("The provided value cannot be less than 1.")
+
     return (
         15000 * cities,
         1250 * cities,
