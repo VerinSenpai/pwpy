@@ -1,5 +1,5 @@
 # This is part of Requiem
-# Copyright (C) 2020  God Empress Verin
+# Copyright (C) 2020  God Empress Verin & Zak S
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,23 +15,27 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-import typing
+from api import fetch_query
 
 
-def score_range(score: float) -> typing.Tuple[float, float]:
+def bank_info(aa_id, key):
+    query = f"""
+      alliances(id:{aa_id}, first:1) {{
+        data {{
+          money
+          coal
+          uranium
+          iron
+          bauxite
+          steel
+          gasoline
+          munitions
+          oil
+          food
+          aluminum
+        }}
+      }}
     """
-    Determines the offensive score range for a given score.
 
-    :param score: Score to determine offensive war ranges for.
-    :return: Minimum attacking range and maximum attacking range, in that order.
-    """
-    min_score = score * 0.75
-    max_score = score * 1.75
-    return min_score, max_score
-
-
-def sort_ongoing_wars(wars: list) -> list:
-    """
-    Sort a provided list of wars for ongoing wars.
-    """
-    return [war for war in wars if int(war["turnsleft"]) > 0 and int(war["winner"]) == 0]
+    response = await fetch_query(key, query)
+    return response["alliances"]["data"]
