@@ -173,7 +173,28 @@ async def within_war_range(
     return nations
 
 
-async def bank_info(key: str, alliance: int) -> dict:
+async def alliance_info(key: str, alliance) -> dict:
+    query = f"""
+         alliances(id:{alliance}, first:1){{
+            data{{
+                name
+                acronym
+                score
+                color
+                acceptmem
+                irclink
+                forumlink
+                flag
+            }}
+          }}
+        }}
+    """
+
+    response = await fetch_query(key, query)
+    return response["alliances"]["data"]
+
+
+async def alliance_bank_info(key: str, alliance: int) -> dict:
     query = f"""
       alliances(id:{alliance}, first:1) {{
         data {{
@@ -196,7 +217,7 @@ async def bank_info(key: str, alliance: int) -> dict:
     return response["alliances"]["data"]
 
 
-async def bank_records(key: str, alliance: int) -> dict:
+async def alliance_bank_records(key: str, alliance: int) -> dict:
     query = f"""
          alliances(id:{alliance}, first:1){{
             data{{
@@ -227,3 +248,89 @@ async def bank_records(key: str, alliance: int) -> dict:
 
     response = await fetch_query(key, query)
     return response["alliances"]["data"]["bankrecs"]
+
+
+async def alliance_tax_records(key: str, alliance: int) -> dict:
+    query = f"""
+         alliances(id:{alliance}, first:1){{
+            data{{
+              taxrecs{{
+                tax_id
+                id
+                note
+                pid
+                sid
+                rid
+                stype
+                rtype
+                money
+                coal
+                uranium
+                iron
+                bauxite
+                steel
+                gasoline
+                munitions
+                oil
+                food
+                aluminum
+              }}
+            }}
+          }}
+        }}
+    """
+
+    response = await fetch_query(key, query)
+    return response["alliances"]["data"]["taxrecs"]
+
+
+async def alliance_treaties(key: str, alliance) -> dict:
+    query = f"""
+         alliances(id:{alliance}, first:1){{
+            data{{
+              sent_treaties {{
+                id
+                date
+                treaty_type
+                turns_left
+                alliance1 {{
+                  id
+                }}
+                alliance2 {{
+                  id
+                }}
+              }}
+              received_treaties {{
+                id
+                date
+                treaty_type
+                turns_left
+                alliance1 {{
+                  id
+                }}
+                alliance2 {{
+                  id
+                }}
+            }}
+          }}
+        }}
+    """
+
+    response = await fetch_query(key, query)
+    return response["alliance"]["data"]
+
+
+async def alliance_members(key: str, alliance: int) -> dict:
+    query = f"""
+         alliances(id:{alliance}, first:1){{
+            data{{
+              nations {{
+                id
+              }}
+            }}
+          }}
+        }}
+    """
+
+    response = await fetch_query(key, query)
+    return response["alliance"]["data"]
