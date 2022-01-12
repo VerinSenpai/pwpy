@@ -22,6 +22,7 @@
 
 
 from pwpy import exceptions
+from bs4 import BeautifulSoup
 
 import aiohttp
 
@@ -59,3 +60,22 @@ async def send_message(
             raise exceptions.LoginFailure("The provided login credentials were invalid!")
 
         await session.post(message_url, data=message_data)
+
+
+async def discord(nation: int) -> str or None:
+    """
+    Fetch a discord username from a given nation page.
+
+    :param nation: A valid nation id.
+    :return: The username listed on the specified nation page or None.
+    """
+    nation_url = f"https://politicsandwar.com/nation/id={nation}"
+    selector = 'tr > td > a[alt="Official PW Discord Server"]'
+
+    async with aiohttp.ClientSession() as session:
+        response = await session.post(nation_url)
+        content = await response.read()
+
+    soup = BeautifulSoup(content, features="html.parser")
+    element = soup.select_one(selector)
+    return element.text if element else None
