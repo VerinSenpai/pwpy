@@ -167,5 +167,8 @@ def expansion_cost(current: int, end: int, infra: int, land: int, *, up: bool = 
 def sort_ongoing_wars(wars: list) -> list:
     """
     Sort a provided list of wars for ongoing wars.
+
+    :param wars: A list of wars to be iterated through. Objects must contain "turnsleft" and "winner" keys.
+    :return: A list of active wars.
     """
     return [war for war in wars if int(war["turnsleft"]) > 0 and int(war["winner"]) == 0]
