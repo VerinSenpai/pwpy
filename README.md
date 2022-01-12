@@ -1,2 +1,2 @@
-# pwpy
-An API wrapper for the politics and war v3 api.
+# PWPY
+Various tools and scrapers for Politics and War and the v3 API.
