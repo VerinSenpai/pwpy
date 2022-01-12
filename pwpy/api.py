@@ -38,8 +38,8 @@ async def fetch_query(key: str, query: str, variables: dict = None) -> dict:
     url = f"https://api.politicsandwar.com/graphql?api_key={key}"
 
     async with aiohttp.ClientSession() as session:
-        response = await session.post(url, json={"query": "{" + query + "}"})
-        data = await response.json()
+        async with session.post(url, json={"query": "{" + query + "}"}) as response:
+            data = await response.json()
 
     if isinstance(data, list):
         for error in data[0]["errors"]:

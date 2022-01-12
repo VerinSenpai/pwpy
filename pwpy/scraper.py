@@ -54,12 +54,12 @@ async def send_message(
     }
 
     async with aiohttp.ClientSession() as session:
-        response = await session.post(login_url, data=login_data)
+        async with session.post(login_url, data=login_data) as response:
+            if "Login Successful" not in str(await response.read()):
+                raise exceptions.LoginFailure("The provided login credentials were invalid!")
 
-        if "Login Successful" not in str(await response.read()):
-            raise exceptions.LoginFailure("The provided login credentials were invalid!")
-
-        await session.post(message_url, data=message_data)
+        async with session.post(message_url, data=message_data):
+            pass
 
 
 async def discord(nation: int) -> str or None:
@@ -73,8 +73,8 @@ async def discord(nation: int) -> str or None:
     selector = 'tr > td > a[alt="Official PW Discord Server"]'
 
     async with aiohttp.ClientSession() as session:
-        response = await session.post(nation_url)
-        content = await response.read()
+        async with session.post(nation_url) as response:
+            content = await response.read()
 
     soup = BeautifulSoup(content, features="html.parser")
     element = soup.select_one(selector)
