@@ -30,4 +30,5 @@ setup(
     packages=find_packages(),
     description="Various tools and scrapers for Politics and War and the v3 API.",
     author="God Empress Verin",
+    url="https://github.com/GodEmpressVerin/pwpy"
 )
