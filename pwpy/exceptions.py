@@ -21,19 +21,19 @@
 # SOFTWARE.
 
 
-class InvalidToken(BaseException):
+class InvalidToken(Exception):
     """
     Exception raised when the provided API key is invalid.
     """
 
 
-class InvalidQuery(BaseException):
+class InvalidQuery(Exception):
     """
     Exception raised when the GraphQL query is invalid.
     """
 
 
-class UnexpectedResponse(BaseException):
+class UnexpectedResponse(Exception):
     """
     Exception raised when the GraphQL response is unexpected.
     """
@@ -42,7 +42,7 @@ class UnexpectedResponse(BaseException):
         self.response = response
 
 
-class LoginFailure(BaseException):
+class LoginFailure(Exception):
     """
     Exception raised when the provided login credentials are invalid.
     """

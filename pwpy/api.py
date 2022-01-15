@@ -35,14 +35,9 @@ async def fetch_query(key: str, query: str, variables: dict = None) -> dict:
     :param variables: A valid query string.
     :return: A dict containing the servers response.
     """
-    url = f"https://api.politicsandwar.com/graphql?api_key={key}"
 
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url, json={"query": "{" + query + "}"}) as response:
-            data = await response.json()
-
-    if isinstance(data, list):
-        for error in data[0]["errors"]:
+    def process_errors(errors: list) -> None:
+        for error in errors:
             message = error["message"]
 
             if "invalid api_key" in message:
@@ -53,6 +48,18 @@ async def fetch_query(key: str, query: str, variables: dict = None) -> dict:
 
             else:
                 raise exceptions.UnexpectedResponse(message)
+
+    url = f"https://api.politicsandwar.com/graphql?api_key={key}"
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json={"query": "{" + query + "}"}) as response:
+            data = await response.json()
+
+    if isinstance(data, list):
+        process_errors(data[0]["errors"])
+
+    elif "errors" in data.keys():
+        process_errors(data["errors"])
 
     elif "data" in data.keys():
         return data["data"]
@@ -79,13 +86,13 @@ class BulkQueryHandler:
         """
         self.queries.append(query)
 
-    async def fetch_query(self) -> dict:
+    async def fetch_query(self, query: str = None) -> dict:
         """
         Fetches all added queries in one go.
 
         :return: A dictionary object containing the servers response.
         """
-        query = "\n".join(self.queries)
+        query = query or "\n".join(self.queries)
         return await fetch_query(self.key, query)
 
 
