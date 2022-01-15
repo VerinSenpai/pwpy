@@ -27,6 +27,22 @@ from bs4 import BeautifulSoup
 import aiohttp
 
 
+async def login(email: str, password: str, session: aiohttp.ClientSession) -> None:
+    """
+    Login to Politics and War.
+
+    :param email: A valid email address for logging in with.
+    :param password: A valid password for logging in with.
+    :param session: A client session to login on.
+    """
+    login_url = "https://politicsandwar.com/login/"
+    login_data = {"email": email, "password": password, "loginform": "Login"}
+
+    async with session.post(login_url, data=login_data) as response:
+        if "Login Successful" not in str(await response.read()):
+            raise exceptions.LoginFailure("The provided login credentials were invalid!")
+
+
 async def send_message(
     email: str, password: str, target: str, subject: str, message: str
 ) -> None:
@@ -40,10 +56,8 @@ async def send_message(
     :param message: The message content to be sent.
     :return: None
     """
-    login_url = "https://politicsandwar.com/login/"
     message_url = "https://politicsandwar.com/inbox/message"
 
-    login_data = {"email": email, "password": password, "loginform": "Login"}
     message_data = {
         "newconversation": "true",
         "receiver": target,
@@ -54,9 +68,7 @@ async def send_message(
     }
 
     async with aiohttp.ClientSession() as session:
-        async with session.post(login_url, data=login_data) as response:
-            if "Login Successful" not in str(await response.read()):
-                raise exceptions.LoginFailure("The provided login credentials were invalid!")
+        await login(email, password, session)
 
         async with session.post(message_url, data=message_data):
             pass
