@@ -180,6 +180,32 @@ async def within_war_range(
     return nations
 
 
+class QueryHandler:
+    """
+    Handles building and fetching of bulk graphql queries.
+    """
+
+    def __init__(self, key: str) -> None:
+        self.key = key
+        self.queries = []
+
+    def add_query(self, query) -> None:
+        """
+        Adds a graphql query to the bulk request.
+
+        :param query: A valid query string.
+        :return: None
+        """
+        self.queries.append(query)
+
+    async def fetch_query(self, query: str = None) -> dict:
+        """
+        Fetches all added queries in one go.
+
+        :return: A dictionary object containing the servers response.
+        """
+        query = query or "\n".join(self.queries)
+        return await fetch_query(self.key, query)
 async def alliance_info(key: str, alliance: int) -> dict:
     query = f"""
     alliances(id:{alliance}, first:1) {{
