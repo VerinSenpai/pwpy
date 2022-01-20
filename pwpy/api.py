@@ -55,45 +55,17 @@ async def fetch_query(key: str, query: str, variables: dict = None) -> dict:
         async with session.post(url, json={"query": "{" + query + "}"}) as response:
             data = await response.json()
 
-    if isinstance(data, list):
-        process_errors(data[0]["errors"])
+    if isinstance(data, dict):
+        if isinstance(data, list):
+            process_errors(data[0]["errors"])
 
-    elif "errors" in data.keys():
-        process_errors(data["errors"])
+        elif "errors" in data.keys():
+            process_errors(data["errors"])
 
-    elif "data" in data.keys():
-        return data["data"]
+        elif "data" in data.keys():
+            return data["data"]
 
-    else:
-        raise exceptions.UnexpectedResponse(str(data))
-
-
-class BulkQueryHandler:
-    """
-    Handles building and fetching of bulk graphql queries.
-    """
-
-    def __init__(self, key: str) -> None:
-        self.key = key
-        self.queries = []
-
-    def add_query(self, query) -> None:
-        """
-        Adds a graphql query to the bulk request.
-
-        :param query: A valid query string.
-        :return: None
-        """
-        self.queries.append(query)
-
-    async def fetch_query(self, query: str = None) -> dict:
-        """
-        Fetches all added queries in one go.
-
-        :return: A dictionary object containing the servers response.
-        """
-        query = query or "\n".join(self.queries)
-        return await fetch_query(self.key, query)
+    raise exceptions.UnexpectedResponse(str(data))
 
 
 async def within_war_range(
@@ -158,7 +130,7 @@ async def within_war_range(
     response = await fetch_query(key, query)
     nations = response["nations"]["data"]
 
-    for nation in nations[::]:
+    for nation in nations[::]:  # the operator here prevents the list from changing size while we iterate through it
         ongoing = utils.sort_ongoing_wars(nation["defensive_wars"])
         if nation["alliance_id"] == omit_alliance:
             nations.remove(nation)
@@ -206,6 +178,13 @@ class QueryHandler:
         """
         query = query or "\n".join(self.queries)
         return await fetch_query(self.key, query)
+
+    async def within_war_range(
+            self, score: int, *, alliance: int = None, powered: bool = True, omit_alliance: int = None
+    ) -> list:
+        return await within_war_range(self.key, score, alliance=alliance, powered=powered, omit_alliance=omit_alliance)
+
+
 async def alliance_info(key: str, alliance: int) -> dict:
     query = f"""
     alliances(id:{alliance}, first:1) {{
