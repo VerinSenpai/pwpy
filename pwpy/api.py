@@ -24,6 +24,7 @@
 from pwpy import exceptions, utils
 
 import aiohttp
+import typing
 
 
 async def fetch_query(key: str, query: str, keys: typing.Iterable = None) -> dict:
