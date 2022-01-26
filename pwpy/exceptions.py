@@ -42,6 +42,12 @@ class UnexpectedResponse(Exception):
         self.response = response
 
 
+class CloudflareInterrupt(Exception):
+    """
+    Exception raised when response status not OK, likely due to cloudflare.
+    """
+
+
 class LoginFailure(Exception):
     """
     Exception raised when the provided login credentials are invalid.
