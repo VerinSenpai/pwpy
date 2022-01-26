@@ -21,10 +21,10 @@
 # SOFTWARE.
 
 
-from . import api
-from . import scraper
-from . import utils
-from . import exceptions
+from .api import *
+from .utils import *
+from .scraper import *
+from .exceptions import *
 
 
 __version__ = "0.3.2"
