@@ -77,7 +77,12 @@ async def fetch_query(key: str, query: str, keys: typing.Iterable = None) -> dic
 
 
 async def within_war_range(
-        key: str, score: int, *, alliance: int = None, powered: bool = True, omit_alliance: int = None
+    key: str,
+    score: int,
+    *,
+    alliance: int = None,
+    powered: bool = True,
+    omit_alliance: int = None
 ) -> list:
     """
     Lookup all targets for a given score within an optional target alliance.
