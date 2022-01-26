@@ -199,6 +199,7 @@ class QueryHandler:
 
 
 async def alliance_info(key: str, alliance: int) -> dict:
+async def alliance_details(key: str, alliance: int) -> dict:
     query = f"""
     alliances(id:{alliance}, first:1) {{
         data{{
