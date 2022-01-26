@@ -32,7 +32,7 @@ async def fetch_query(key: str, query: str, keys: typing.Iterable = None) -> dic
 
     :param key: A valid politics and war API key.
     :param query: A valid query string.
-    :param variables: A valid query string.
+    :param keys: An iterable of keys to retrieve from the response.
     :return: A dict containing the servers response.
     """
 
