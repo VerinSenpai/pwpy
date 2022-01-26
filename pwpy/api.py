@@ -215,8 +215,7 @@ async def alliance_details(key: str, alliance: int) -> dict:
     }}
     """
 
-    response = await fetch_query(key, query)
-    return response["alliances"]["data"]
+    return await fetch_query(key, query, keys=("alliances", "data"))
 
 
 async def alliance_bank_contents(key: str, alliance: int) -> dict:
@@ -238,8 +237,7 @@ async def alliance_bank_contents(key: str, alliance: int) -> dict:
     }}
     """
 
-    response = await fetch_query(key, query)
-    return response["alliances"]["data"]
+    return await fetch_query(key, query, keys=("alliances", "data"))
 
 
 async def alliance_bank_records(key: str, alliance: int) -> dict:
@@ -270,8 +268,7 @@ async def alliance_bank_records(key: str, alliance: int) -> dict:
     }}
     """
 
-    response = await fetch_query(key, query)
-    return response["alliances"]["data"]["bankrecs"]
+    return await fetch_query(key, query, keys=("alliances", "data", "bankrecs"))
 
 
 async def alliance_treaties(key: str, alliance: int) -> dict:
@@ -306,8 +303,7 @@ async def alliance_treaties(key: str, alliance: int) -> dict:
     }}
     """
 
-    response = await fetch_query(key, query)
-    return response["alliance"]["data"]
+    return await fetch_query(key, query, keys=("alliances", "data"))
 
 
 async def alliance_members(key: str, alliance: int) -> dict:
@@ -321,5 +317,4 @@ async def alliance_members(key: str, alliance: int) -> dict:
     }}
     """
 
-    response = await fetch_query(key, query)
-    return response["alliance"]["data"]
+    return await fetch_query(key, query, keys=("alliances", "data"))
