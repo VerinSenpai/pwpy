@@ -53,6 +53,9 @@ async def fetch_query(key: str, query: str, variables: dict = None) -> dict:
 
     async with aiohttp.ClientSession() as session:
         async with session.post(url, json={"query": "{" + query + "}"}) as response:
+            if not response.ok:
+                raise exceptions.CloudflareInterrupt("cloudflare error encountered while trying to post query!")
+
             data = await response.json()
 
     if isinstance(data, dict):
