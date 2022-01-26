@@ -165,40 +165,6 @@ async def within_war_range(
     return nations
 
 
-class QueryHandler:
-    """
-    Handles building and fetching of bulk graphql queries.
-    """
-
-    def __init__(self, key: str) -> None:
-        self.key = key
-        self.queries = []
-
-    def add_query(self, query) -> None:
-        """
-        Adds a graphql query to the bulk request.
-
-        :param query: A valid query string.
-        :return: None
-        """
-        self.queries.append(query)
-
-    async def fetch_query(self, query: str = None) -> dict:
-        """
-        Fetches all added queries in one go.
-
-        :return: A dictionary object containing the servers response.
-        """
-        query = query or "\n".join(self.queries)
-        return await fetch_query(self.key, query)
-
-    async def within_war_range(
-            self, score: int, *, alliance: int = None, powered: bool = True, omit_alliance: int = None
-    ) -> list:
-        return await within_war_range(self.key, score, alliance=alliance, powered=powered, omit_alliance=omit_alliance)
-
-
-async def alliance_info(key: str, alliance: int) -> dict:
 async def alliance_details(key: str, alliance: int) -> dict:
     query = f"""
     alliances(id:{alliance}, first:1) {{
@@ -318,3 +284,37 @@ async def alliance_members(key: str, alliance: int) -> dict:
     """
 
     return await fetch_query(key, query, keys=("alliances", "data"))
+
+
+class QueryHandler:
+    """
+    Object for building of bulk queries and fetching singles/bulk queries.
+    """
+
+    def __init__(self, key: str) -> None:
+        self.key = key
+        self._queries = set()
+
+    def add_query(self, query) -> None:
+        """
+        Adds a graphql query to the bulk request.
+
+        :param query: A valid query string.
+        :return: None
+        """
+        self._queries.add(query)
+
+    async def fetch_query(self, query: str = None, *args, **kwargs) -> dict:
+        """
+        Fetches all added queries in one go.
+
+        :return: A dictionary object containing the servers response.
+        """
+        query = query or "\n".join(self._queries)
+        return await fetch_query(self.key, query, *args, **kwargs)
+
+    async def within_war_range(self, *args, **kwargs) -> list:
+        """
+        Reference for coro within_war_range where api key is passed from the class.
+        """
+        return await within_war_range(self.key, *args, **kwargs)
