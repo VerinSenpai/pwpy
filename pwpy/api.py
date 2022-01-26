@@ -69,8 +69,9 @@ async def fetch_query(key: str, query: str, keys: typing.Iterable = None) -> dic
         elif "data" in data.keys():
             data = data["data"]
 
-            for key in keys:
-                data = data[key]
+            if keys:
+                for key in keys:
+                    data = data[key]
 
             return data
 
