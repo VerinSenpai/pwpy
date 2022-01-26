@@ -26,7 +26,7 @@ from pwpy import exceptions, utils
 import aiohttp
 
 
-async def fetch_query(key: str, query: str, variables: dict = None) -> dict:
+async def fetch_query(key: str, query: str, keys: typing.Iterable = None) -> dict:
     """
     Fetches a given query from the gql api using a provided api key.
 
@@ -66,7 +66,12 @@ async def fetch_query(key: str, query: str, variables: dict = None) -> dict:
             process_errors(data["errors"])
 
         elif "data" in data.keys():
-            return data["data"]
+            data = data["data"]
+
+            for key in keys:
+                data = data[key]
+
+            return data
 
     raise exceptions.UnexpectedResponse(str(data))
 
