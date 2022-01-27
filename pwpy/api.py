@@ -27,7 +27,7 @@ import aiohttp
 import typing
 
 
-async def fetch_query(key: str, query: str, keys: typing.Iterable = None) -> typing.Any[dict, int, list]:
+async def fetch_query(key: str, query: str, keys: typing.Iterable = None) -> typing.Any:
     """
     Fetches a given query from the gql api using a provided api key.
 
@@ -358,7 +358,7 @@ class QueryHandler:
         """
         self._queries.add(query)
 
-    async def fetch_query(self, query: str = None, *args, **kwargs) -> typing.Any[dict, int, list]:
+    async def fetch_query(self, query: str = None, *args, **kwargs) -> typing.Any:
         """
         Fetches all added queries in one go.
 
