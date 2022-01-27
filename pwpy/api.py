@@ -280,12 +280,42 @@ async def alliance_members(key: str, alliance: int) -> dict:
         data{{
             nations {{
                 id
+                alliance_position
+                nation_name
+                leader_name
+                score
+                warpolicy
+                dompolicy
+                color
+                num_cities
+                flag
+                espionage_available
+                last_active
+                date
+                soldiers
+                tanks
+                aircraft
+                ships
+                missiles
+                nukes
+                treasures {{
+                    name
+                    bonus
+                }}
+                offensive_wars {{
+                    turnsleft
+                    winner
+                }}
+                defensive_wars {{
+                    turnsleft
+                    winner
+                }}
             }}
         }}
     }}
     """
 
-    return await fetch_query(key, query, keys=("alliances", "data"))
+    return await fetch_query(key, query, keys=("alliances", "data", "nations"))
 
 
 class QueryHandler:
