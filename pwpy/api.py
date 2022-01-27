@@ -296,7 +296,7 @@ async def alliance_treaties(key: str, alliance: int) -> dict:
     return await fetch_query(key, query, keys=("alliances", "data"))
 
 
-async def alliance_members(key: str, alliance: int) -> dict:
+async def alliance_members(key: str, alliance: int) -> list:
     query = f"""
     alliances(id:{alliance}, first:1){{
         data{{
@@ -358,7 +358,7 @@ class QueryHandler:
         """
         self._queries.add(query)
 
-    async def fetch_query(self, query: str = None, *args, **kwargs) -> dict:
+    async def fetch_query(self, query: str = None, *args, **kwargs) -> typing.Any[dict, int, list]:
         """
         Fetches all added queries in one go.
 
