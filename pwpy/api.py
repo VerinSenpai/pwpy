@@ -368,7 +368,25 @@ class QueryHandler:
         return await fetch_query(self.key, query, *args, **kwargs)
 
     async def within_war_range(self, *args, **kwargs) -> list:
-        """
-        Reference for coro within_war_range where api key is passed from the class.
-        """
         return await within_war_range(self.key, *args, **kwargs)
+
+    async def nations_pages(self) -> int:
+        return await nations_pages(self.key)
+
+    async def alliances_pages(self) -> int:
+        return await alliances_pages(self.key)
+
+    async def alliance_details(self, alliance: int) -> dict:
+        return await alliance_details(self.key, alliance)
+
+    async def alliance_bank_contents(self, alliance: int) -> dict:
+        return await alliance_bank_contents(self.key, alliance)
+
+    async def alliance_bank_records(self, alliance: int) -> dict:
+        return await alliance_bank_records(self.key, alliance)
+
+    async def alliance_treaties(self, alliance: int) -> dict:
+        return await alliance_treaties(self.key, alliance)
+
+    async def alliance_members(self, alliance: int) -> list:
+        return await alliance_members(self.key, alliance)
