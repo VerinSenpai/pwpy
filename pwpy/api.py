@@ -167,6 +167,28 @@ async def within_war_range(
     return nations
 
 
+async def nations_pages(key: str) -> int:
+    query = """
+    nations(first: 500) {
+        paginatorInfo {
+            lastPage
+        }
+    }
+    """
+    return await fetch_query(key, query, keys=["nations", "paginatorInfo", "lastPage"])
+
+
+async def alliances_pages(key: str) -> int:
+    query = """
+    alliances(first: 50) {
+        paginatorInfo {
+            lastPage
+        }
+    }
+    """
+    return await fetch_query(key, query, keys=["alliances", "paginatorInfo", "lastPage"])
+
+
 async def alliance_details(key: str, alliance: int) -> dict:
     query = f"""
     alliances(id:{alliance}, first:1) {{
