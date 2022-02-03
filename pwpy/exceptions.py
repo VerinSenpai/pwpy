@@ -27,6 +27,12 @@ class InvalidToken(Exception):
     """
 
 
+class NoTokenProvided(Exception):
+    """
+    Exception raised when no global token is set and no local token is provided.
+    """
+
+
 class InvalidQuery(Exception):
     """
     Exception raised when the GraphQL query is invalid.
