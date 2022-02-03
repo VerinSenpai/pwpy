@@ -21,11 +21,14 @@
 # SOFTWARE.
 
 
-from .api import *
+from .client import *
 from .utils import *
 from .scraper import *
 from .exceptions import *
+from .links import *
+from .endpoints import *
 
 
-__version__ = "0.4.1"
+__version__ = "0.5.0"
 __author__ = "God Empress Verin"
+__contributors__ = [__author__, "Zevfer"]
