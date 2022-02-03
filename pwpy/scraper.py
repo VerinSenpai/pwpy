@@ -25,6 +25,14 @@ from pwpy import exceptions
 from bs4 import BeautifulSoup
 
 import aiohttp
+import typing
+
+
+__all__: typing.List[str] = [
+    "login",
+    "send_message",
+    "discord"
+]
 
 
 async def login(email: str, password: str, session: aiohttp.ClientSession) -> None:
