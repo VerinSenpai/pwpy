@@ -20,12 +20,22 @@ import math
 
 
 __all__: typing.List[str] = [
+    "NATION",
+    "ALLIANCE",
+    "NEW_MESSAGE",
+    "API",
     "score_range",
     "infra_cost",
     "land_cost",
     "city_cost",
     "sort_ongoing_wars"
 ]
+
+
+NATION: str = "https://politicsandwar.com/nation/id="
+ALLIANCE: str = "https://politicsandwar.com/alliance/id="
+NEW_MESSAGE: str = "https://politicsandwar.com/inbox/message/receiver="
+API: str = f"https://api.politicsandwar.com/graphql?api_key="
 
 
 def score_range(score: float) -> typing.Tuple[float, float]:
@@ -40,17 +50,17 @@ def score_range(score: float) -> typing.Tuple[float, float]:
     return min_score, max_score
 
 
-def infra_cost(starting: int, ending: int) -> float:
+def infra_cost(starting: int, to_buy: int) -> float:
     """
     Calculate the cost to purchase or sell infrastructure.
 
     :param starting: A starting infrastructure amount.
-    :param ending: The desired infrastructure amount.
+    :param to_buy: The desired infrastructure amount.
     """
     def unit_cost(amount: int):
         return ((abs(amount - 10) ** 2.2) / 710) + 300
 
-    difference = starting - ending
+    difference = to_buy - starting
     cost = 0
 
     if difference < 0:
@@ -73,18 +83,18 @@ def infra_cost(starting: int, ending: int) -> float:
     return cost
 
 
-def land_cost(starting: int, ending: int) -> float:
+def land_cost(starting: int, to_buy: int) -> float:
     """
     Calculate the cost to purchase or sell land.
 
     :param starting: A starting land amount.
-    :param ending: The desired land amount.
+    :param to_buy: The desired land amount.
     :return: The cost to purchase or sell land.
     """
     def unit_cost(amount: int):
         return (.002 * (amount-20) * (amount-20)) + 50
 
-    difference = ending - starting
+    difference = to_buy - starting
     cost = 0
 
     if difference < 0:

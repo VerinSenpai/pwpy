@@ -13,20 +13,3 @@
 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-
-import typing
-
-
-__all__: typing.List[str] = [
-    "NATION",
-    "ALLIANCE",
-    "NEW_MESSAGE",
-    "API"
-]
-
-
-NATION: str = "https://politicsandwar.com/nation/id="
-ALLIANCE: str = "https://politicsandwar.com/alliance/id="
-NEW_MESSAGE: str = "https://politicsandwar.com/inbox/message/receiver="
-API: str = f"https://api.politicsandwar.com/graphql?api_key="

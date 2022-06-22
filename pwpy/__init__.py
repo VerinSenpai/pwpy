@@ -21,12 +21,10 @@
 # SOFTWARE.
 
 
-from .client import *
+from .api import *
 from .utils import *
-from .scraper import *
+from .scrape import *
 from .exceptions import *
-from .links import *
-from .endpoints import *
 
 
 __version__ = "0.5.0"

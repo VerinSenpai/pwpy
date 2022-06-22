@@ -1,1 +1,2 @@
 aiohttp
+bs4
