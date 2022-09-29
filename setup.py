@@ -26,9 +26,9 @@ from setuptools import setup, find_packages
 
 setup(
     name="pwpy",
-    version="0.5.0",
+    version="0.6.0",
     packages=find_packages(),
     description="Various tools and scrapers for Politics and War and the v3 API.",
-    author="God Empress Verin",
+    author="Verin Senpai",
     url="https://github.com/GodEmpressVerin/pwpy"
 )
