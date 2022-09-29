@@ -21,12 +21,13 @@
 # SOFTWARE.
 
 
-from .api import *
-from .utils import *
-from .scrape import *
-from .exceptions import *
+from pwpy import api
+from pwpy import exceptions
+from pwpy import utils
+from pwpy import scrape
+from pwpy import links
 
 
-__version__ = "0.5.0"
-__author__ = "God Empress Verin"
+__version__ = "0.6.0"
+__author__ = "Verin Senpai"
 __contributors__ = [__author__, "Zevfer"]
