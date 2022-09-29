@@ -20,22 +20,12 @@ import math
 
 
 __all__: typing.List[str] = [
-    "NATION",
-    "ALLIANCE",
-    "NEW_MESSAGE",
-    "API",
     "score_range",
     "infra_cost",
     "land_cost",
     "city_cost",
     "sort_ongoing_wars"
 ]
-
-
-NATION: str = "https://politicsandwar.com/nation/id="
-ALLIANCE: str = "https://politicsandwar.com/alliance/id="
-NEW_MESSAGE: str = "https://politicsandwar.com/inbox/message/receiver="
-API: str = f"https://api.politicsandwar.com/graphql?api_key="
 
 
 def score_range(score: float) -> typing.Tuple[float, float]:
