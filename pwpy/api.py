@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 
-from pwpy import exceptions, utils
+from pwpy import exceptions, utils, links
 
 import aiohttp
 import typing
@@ -103,7 +103,7 @@ async def fetch_query(
         raise exceptions.NoTokenProvided("no api key was passed for this query call!")
 
     async with aiohttp.ClientSession() as session:
-        async with session.post(utils.API + token, json={"query": "{" + query + "}"}) as response:
+        async with session.post(links.API + token, json={"query": "{" + query + "}"}) as response:
             if not response.ok:
                 raise exceptions.CloudflareInterrupt("cloudflare error encountered while trying to post query!")
 
@@ -117,9 +117,7 @@ async def fetch_query(
         for key in keys:
             data = data[key]
 
-        return data
-
-    raise exceptions.UnexpectedResponse(str(data))
+    return data
 
 
 class BulkQuery:
