@@ -130,7 +130,6 @@ class BulkQuery:
 
     def __init__(self):
         self._page_groups: dict = {}
-        self._keys: list = []
         self._queries: list = []
 
     @staticmethod
@@ -166,8 +165,7 @@ class BulkQuery:
             response = await asyncio.gather(*tasks)
 
             for chunk in response:
-                for result in chunk:
-                    results.update(result)
+                results.update(chunk)
 
         else:
             query = "\n".join(self._queries)
@@ -247,7 +245,7 @@ async def within_war_range(
     }}
     """
 
-    nations = await fetch_query(query, keys=("nations", " data"))
+    nations = await fetch_query(query, keys=("nations", "data"))
 
     for nation in nations[::]:
         ongoing = utils.sort_ongoing_wars(nation["defensive_wars"])
@@ -282,6 +280,65 @@ async def nations_pages(*, token: str = None) -> int:
     return await fetch_query(query, token=token, keys=("nations", "paginatorInfo", "lastPage"))
 
 
+async def nation_details(nation: int, *, token: str = None) -> dict:
+    query = f"""
+    nations(id:{nation}, first:1) {{
+        data{{
+            nation_name
+            leader_name
+            alliance_id
+            alliance_position
+            alliance_position_info
+            alliance
+            continent
+            war_policy
+            domestic_policy
+            color
+            num_cities
+            score
+            update_tz
+            population
+            flag
+            vacation_mode_turns
+            beige_turns
+            espionage_available
+            last_active
+            date
+            soldiers
+            tanks
+            aircraft
+            missiles
+            nukes
+            discord
+            discord_id
+            turns_since_last_city
+            turns_since_last_project
+            wars_won
+            wars_lost
+            tax_id
+            alliance_seniority
+            gross_national_income
+            gross_domestic_product
+            soldier_casualties
+            soldier_kills
+            tank_casualties
+            tank_kills
+            aircraft_casualties
+            aircraft_kills
+            ship_casualties
+            ship_kills
+            missile_casualties
+            missile_kills
+            nuke_casualties
+            nuke_kills
+            money_looted
+            vip
+        }}
+    }}
+    """
+    return await fetch_query(query, token=token, keys=("nations", "data"))
+
+
 async def alliances_pages(*, token: str = None) -> int:
     query = """
     alliances(first: 50) {
@@ -301,9 +358,9 @@ async def alliance_details(alliance: int, *, token: str = None) -> dict:
             acronym
             score
             color
-            acceptmem
-            irclink
-            forumlink
+            accept_members
+            discord_link
+            forum_link
             flag
         }}
     }}
