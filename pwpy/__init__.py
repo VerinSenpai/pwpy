@@ -28,6 +28,6 @@ from pwpy import scrape
 from pwpy import links
 
 
-__version__ = "0.6.0"
+__version__ = "0.5.0"
 __author__ = "Verin Senpai"
 __contributors__ = [__author__, "Zevfer"]
