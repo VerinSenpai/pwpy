@@ -284,6 +284,7 @@ async def nation_details(nation: int, *, token: str = None) -> dict:
     query = f"""
     nations(id:{nation}, first:1) {{
         data{{
+            id
             nation_name
             leader_name
             alliance_id
@@ -374,8 +375,25 @@ async def nation_details(nation: int, *, token: str = None) -> dict:
     return await fetch_query(query, token=token, keys=("nations", "data"))
 
 
-async def nation_wars(nation: int, *, token: str = None) -> dict:
-    pass
+async def nation_bank_contents(nation: int, *, token: str = None) -> dict:
+    query = f"""
+    nations(id:{nation}, first:1) {{
+        data {{
+            money
+            coal
+            uranium
+            iron
+            bauxite
+            steel
+            gasoline
+            munitions
+            oil
+            food
+            aluminum
+        }}
+    }}
+    """
+    return await fetch_query(query, token=token, keys=("nations", "data"))
 
 
 async def alliances_pages(*, token: str = None) -> int:
@@ -393,13 +411,17 @@ async def alliance_details(alliance: int, *, token: str = None) -> dict:
     query = f"""
     alliances(id:{alliance}, first:1) {{
         data{{
+            id
             name
             acronym
             score
             color
+            date
+            average_score
             accept_members
             discord_link
             forum_link
+            wiki_link
             flag
         }}
     }}
@@ -502,8 +524,8 @@ async def alliance_members_details(alliance: int, *, token: str = None) -> list:
                 nation_name
                 leader_name
                 score
-                warpolicy
-                dompolicy
+                war_policy
+                domestic_policy
                 color
                 num_cities
                 flag
@@ -521,11 +543,11 @@ async def alliance_members_details(alliance: int, *, token: str = None) -> list:
                     bonus
                 }}
                 offensive_wars {{
-                    turnsleft
+                    turns_left
                     winner
                 }}
                 defensive_wars {{
-                    turnsleft
+                    turns_left
                     winner
                 }}
             }}
