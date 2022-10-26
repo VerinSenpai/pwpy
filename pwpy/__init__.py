@@ -25,7 +25,6 @@ from pwpy import api
 from pwpy import exceptions
 from pwpy import utils
 from pwpy import scrape
-from pwpy import links
 
 
 __version__ = "0.5.0"
