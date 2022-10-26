@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from pwpy import exceptions, urls
+from pwpy import exceptions, urls, TOKEN
 
 import aiohttp
 import typing
@@ -89,7 +89,7 @@ def _parse_query(query: dict) -> str:
     return " ".join(parsed_queries)
 
 
-async def get(query: dict, token: str, keys: typing.Iterable[str] = None) -> typing.Any:
+async def get(query: dict, *, token: str = TOKEN, keys: typing.Iterable[str] = None) -> typing.Any:
     """
     Fetches a given query from the gql api using a provided api key.
 
