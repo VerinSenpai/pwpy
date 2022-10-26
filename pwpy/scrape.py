@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 
-from pwpy import exceptions, api
+from pwpy import exceptions, urls
 from bs4 import BeautifulSoup
 
 import aiohttp
@@ -45,7 +45,7 @@ async def login(email: str, password: str, session: aiohttp.ClientSession) -> No
     """
     login_data = {"email": email, "password": password, "loginform": "Login"}
 
-    async with session.post(api.LOGIN, data=login_data) as response:
+    async with session.post(urls.LOGIN, data=login_data) as response:
         if "Login Successful" not in str(await response.read()):
             raise exceptions.LoginFailure("The provided login credentials were invalid!")
 
@@ -75,7 +75,7 @@ async def send_message(
     async with aiohttp.ClientSession() as session:
         await login(email, password, session)
 
-        async with session.post(api.MESSAGE, data=message_data):
+        async with session.post(urls.MESSAGE, data=message_data):
             pass
 
 
@@ -89,7 +89,7 @@ async def discord(nation: int) -> str or None:
     selector = 'tr > td > a[alt="Official PW Discord Server"]'
 
     async with aiohttp.ClientSession() as session:
-        async with session.post(api.NATION + str(nation)) as response:
+        async with session.post(urls.NATION + str(nation)) as response:
             content = await response.read()
 
     soup = BeautifulSoup(content, features="html.parser")
