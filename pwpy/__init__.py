@@ -27,7 +27,9 @@ __all__ = [
     "utils",
     "urls",
     "scrape",
-    "__version__"
+    "__version__",
+    "TOKEN",
+    "set_token"
 ]
 
 
@@ -39,3 +41,12 @@ from pwpy import scrape
 
 
 __version__ = "0.5.0"
+TOKEN = None
+
+
+def set_token(token: str) -> None:
+    """
+    Sets a global token to be used when one is not provided to a method.
+    """
+    global TOKEN
+    TOKEN = token
