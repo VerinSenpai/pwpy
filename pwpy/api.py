@@ -89,7 +89,11 @@ def _parse_query(query: dict) -> str:
     return " ".join(parsed_queries)
 
 
-async def get(query: dict, *, token: str = TOKEN, keys: typing.Iterable[str] = None) -> typing.Any:
+async def get(
+    query: dict, *,
+    token: str = TOKEN,
+    keys: typing.Iterable[str] = None
+) -> typing.Any:
     """
     Fetches a given query from the gql api using a provided api key.
 
