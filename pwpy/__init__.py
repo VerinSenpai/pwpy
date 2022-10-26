@@ -21,12 +21,21 @@
 # SOFTWARE.
 
 
-from pwpy import api
+__all__ = [
+    "query",
+    "exceptions",
+    "utils",
+    "urls",
+    "scrape",
+    "__version__"
+]
+
+
+from pwpy import query
 from pwpy import exceptions
 from pwpy import utils
+from pwpy import urls
 from pwpy import scrape
 
 
 __version__ = "0.5.0"
-__author__ = "Verin Senpai"
-__contributors__ = [__author__, "Zevfer"]
