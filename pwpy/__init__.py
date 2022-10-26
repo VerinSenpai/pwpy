@@ -38,4 +38,4 @@ from pwpy import urls
 from pwpy import scrape
 
 
-__version__ = "0.5.0"
+__version__ = "0.6.0"
