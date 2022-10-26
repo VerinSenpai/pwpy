@@ -26,7 +26,6 @@ import typing
 
 __all__: typing.List[str] = [
     "InvalidToken",
-    "NoTokenProvided",
     "InvalidQuery",
     "UnexpectedResponse",
     "CloudflareInterrupt",
@@ -37,12 +36,6 @@ __all__: typing.List[str] = [
 class InvalidToken(Exception):
     """
     Exception raised when the provided API key is invalid.
-    """
-
-
-class NoTokenProvided(Exception):
-    """
-    Exception raised when no global token is set and no local token is provided.
     """
 
 
