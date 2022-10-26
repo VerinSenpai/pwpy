@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 
-from pwpy import exceptions, utils, links
+from pwpy import exceptions
 
 import aiohttp
 import typing
@@ -30,34 +30,35 @@ import asyncio
 
 __all__: typing.List[str] = [
     "TOKEN",
+    "NATION",
+    "ALLIANCE",
+    "MESSAGE",
+    "API",
+    "LOGIN",
     "set_token",
     "fetch_query",
-    "BulkQuery",
-    "within_war_range",
-    "nations_pages",
-    "alliances_pages",
-    "alliance_details",
-    "alliance_treaties",
-    "alliance_members_details",
-    "alliance_bank_records",
-    "alliance_bank_contents"
 ]
 
 
 TOKEN: str = ""
+NATION: str = "https://politicsandwar.com/nation/id="
+ALLIANCE: str = "https://politicsandwar.com/alliance/id="
+MESSAGE: str = "https://politicsandwar.com/inbox/message/receiver="
+API: str = f"https://api.politicsandwar.com/graphql?api_key="
+LOGIN: str = "https://politicsandwar.com/login/"
 
 
 def set_token(token: str) -> None:
     """
-    Sets a token to be used by all queries where a token is not provided.
+    Set a global token.
     """
     global TOKEN
     TOKEN = token
 
 
-def parse_errors(data) -> None:
+def _parse_errors(data) -> None:
     """
-    Parse return data for errors, raising the first one encountered.
+    Parse data for errors, raising the first one encountered.
     """
     def interpret_errors(errors):
         message = errors[0]["message"]
@@ -84,38 +85,73 @@ def parse_errors(data) -> None:
     raise exceptions.UnexpectedResponse(str(data))
 
 
+def _parse_query(query: dict) -> str:
+    """
+    Parse a provided dictionary and return a gql query string.
+    """
+    def parse_variables(variables) -> list:
+        parsed = []
+
+        for section, element in variables.items():
+            if isinstance(element, str):
+                parsed.append(f"{section} {{{element}}}")
+
+            elif isinstance(element, typing.Iterable):
+                local = []
+
+                for item in element:
+                    if isinstance(item, dict):
+                        local.append(" ".join(parse_variables(item)))
+
+                    elif isinstance(item, str):
+                        local.append(item)
+
+                parsed.append(f"{section} {{" + " ".join(local) + "}")
+
+        return parsed
+
+    parsed_queries = []
+
+    for name, entry in query.items():
+        parsed_args = ", ".join(f"{key}:{value}" for key, value in entry["args"].items())
+        parsed_variables = " ".join(parse_variables(entry["variables"]))
+        parsed_queries.append(f"{name}({parsed_args}) {{{parsed_variables}}}")
+
+    return " ".join(parsed_queries)
+
+
 async def fetch_query(
-    query: str, *,
+    query: dict, *,
     token: typing.Optional[str] = None,
-    keys: typing.Optional[typing.Iterable] = None
+    keys: typing.Iterable = None
 ) -> typing.Any:
     """
     Fetches a given query from the gql api using a provided api key.
 
     :param token: A valid Politics and War API key.
-    :param query: A valid query string.
-    :param keys: An iterable of keys to retrieve from the response.
-    :return: A dict containing the servers response.
+    :param query: A query dictionary object.
+    :param keys: A list of keys to parse the response with.
+    :return: A dictionary response from the server.
     """
     token = token or TOKEN
 
     if not token:
         raise exceptions.NoTokenProvided("no api key was passed for this query call!")
 
+    query = _parse_query(query)
+
     async with aiohttp.ClientSession() as session:
-        async with session.post(links.API + token, json={"query": "{" + query + "}"}) as response:
+        async with session.post(API + token, json={"query": f"{{{query}}}"}) as response:
             if not response.ok:
                 raise exceptions.CloudflareInterrupt("cloudflare error encountered while trying to post query!")
 
             data = await response.json()
 
-    parse_errors(data)
+    _parse_errors(data)
 
     data = data["data"]
-
-    if keys:
-        for key in keys:
-            data = data[key]
+    for key in keys:
+        data = data[key]
 
     return data
 
@@ -124,434 +160,38 @@ class BulkQuery:
 
     __slots__: typing.List = [
         "_page_groups",
-        "_keys",
         "_queries",
     ]
 
     def __init__(self):
-        self._page_groups: dict = {}
         self._queries: list = []
 
     @staticmethod
-    def _chunk_requests(iterable: typing.Sized, length: int):
+    def _chunk_requests(iterable: typing.Sized, length):
         for count in range(0, len(iterable), length):
-            yield iterable[count:count + length]
+            chunk = {}
 
-    def insert(self, query: str, page_group: str = None) -> None:
-        if page_group:
-            page_num, _ = self._page_groups.get(page_group)
+            for entry in iterable[count:count + length]:
+                chunk.update(entry)
 
-            if page_num:
-                page_num += 1
-            else:
-                page_num = 1
+            yield chunk
 
-            self._page_groups[page_group] = page_num
-            query = f"{page_group}_{page_num}: " + query
-
+    def insert(self, query: dict) -> None:
         self._queries.append(query)
 
-    async def fetch_query(self, *, token: str = None, payloads: int = 10) -> None:
+    async def fetch_query(self, *, token: str = None, chunk_size: int = 10) -> dict:
         results = {}
 
-        if payloads > 0:
-            chunks = self._chunk_requests(self._queries, payloads)
-            tasks = set()
+        chunk_size = chunk_size if chunk_size > 0 else 1
+        chunks = self._chunk_requests(self._queries, chunk_size)
+        tasks = set()
 
-            for chunk in chunks:
-                query = "\n".join(chunk)
-                tasks.add(asyncio.create_task(fetch_query(query, token=token)))
+        for chunk in chunks:
+            tasks.add(asyncio.create_task(fetch_query(chunk, token=token)))
 
-            response = await asyncio.gather(*tasks)
+        response = await asyncio.gather(*tasks)
 
-            for chunk in response:
-                results.update(chunk)
-
-        else:
-            query = "\n".join(self._queries)
-            results = await fetch_query(query, token=token)
-
-        for page_group, page_nums in self._page_groups.items():
-            combined = list()
-
-            for page_num in page_nums:
-                page_key = f"{page_group}_{page_num}"
-                combined.extend(results[page_key])
-                results.pop(page_key)
-
-            results[page_group] = combined
+        for chunk in response:
+            results.update(chunk)
 
         return results
-
-
-async def within_war_range(
-    score: int, *,
-    alliance: int = None,
-    powered: bool = True,
-    omit_alliance: int = None
-) -> list:
-    """
-    Lookup all targets for a given score within an optional target alliance.
-
-    :param score: Score to be calculated with.
-    :param alliance: Target alliance to narrow the search. Defaults to 0.
-    :param powered: Whether to discriminate against unpowered cities. Defaults to True.
-    :param omit_alliance: An alliance to be omitted from search results.
-    :return: A list of nations that fall within the provided search criteria.
-    """
-    min_score, max_score = utils.score_range(score)
-
-    alliance_query = f"alliance_id: {alliance}" if alliance is not None else ""
-
-    query = f"""
-    nations(first: 100, min_score: {min_score}, max_score: {max_score}, {alliance_query}, vmode: false) {{
-        data {{
-            id
-            nation_name
-            leader_name
-            color
-            alliance_id
-            alliance_position
-            alliance {{
-                name
-                score
-            }}
-            warpolicy
-            flag
-            num_cities
-            score
-            espionage_available
-            last_active
-            soldiers
-            tanks
-            aircraft
-            ships
-            missiles
-            nukes
-            cities {{
-                powered
-            }}
-            offensive_wars {{
-                id
-                winner
-                turnsleft
-            }}
-            defensive_wars {{
-                id
-                winner
-                turnsleft
-            }}
-        }}
-    }}
-    """
-
-    nations = await fetch_query(query, keys=("nations", "data"))
-
-    for nation in nations[::]:
-        ongoing = utils.sort_ongoing_wars(nation["defensive_wars"])
-        if nation["alliance_id"] == omit_alliance:
-            nations.remove(nation)
-
-        elif nation["color"] == "beige":
-            nations.remove(nation)
-
-        elif len(ongoing) == 3:
-            nations.remove(nation)
-
-        elif powered:
-            for city in nation["cities"]:
-                if city["powered"]:
-                    continue
-
-                nations.remove(nation)
-                break
-
-    return nations
-
-
-async def nations_pages(*, token: str = None) -> int:
-    query = """
-    nations(first: 500) {
-        paginatorInfo {
-            lastPage
-        }
-    }
-    """
-    return await fetch_query(query, token=token, keys=("nations", "paginatorInfo", "lastPage"))
-
-
-async def nation_details(nation: int, *, token: str = None) -> dict:
-    query = f"""
-    nations(id:{nation}, first:1) {{
-        data{{
-            id
-            nation_name
-            leader_name
-            alliance_id
-            alliance_position
-            alliance_position_info
-            alliance
-            continent
-            war_policy
-            domestic_policy
-            color
-            num_cities
-            score
-            update_tz
-            population
-            flag
-            vacation_mode_turns
-            beige_turns
-            espionage_available
-            last_active
-            date
-            soldiers
-            tanks
-            aircraft
-            missiles
-            nukes
-            discord
-            discord_id
-            turns_since_last_city
-            turns_since_last_project
-            projects
-            project_bits
-            iron_works
-            bauxite_works
-            arms_stockpile
-            emergency_gasoline_reserve
-            mass_irrigation
-            international_trade_center
-            missile_launch_pad
-            nuclear_research_facility
-            iron_dome
-            vital_defense_system
-            central_intelligence_agency
-            center_for_civil_engineering
-            propaganda_bureau
-            uranium_enrichment_program
-            urban_planning
-            advanced_urban_planning
-            space_program
-            spy_satellite
-            moon_landing
-            pirate_economy
-            recycling_initiative
-            telecommunications_satellite
-            green_technologies
-            arable_land_agency
-            clinical_research_center
-            specialized_police_training_program
-            advanced_engineering_corps
-            government_support_agency
-            research_and_development_center
-            resource_production_center
-            metropolitan_planning
-            military_salvage
-            fallout_shelter
-            wars_won
-            wars_lost
-            tax_id
-            alliance_seniority
-            gross_national_income
-            gross_domestic_product
-            soldier_casualties
-            soldier_kills
-            tank_casualties
-            tank_kills
-            aircraft_casualties
-            aircraft_kills
-            ship_casualties
-            ship_kills
-            missile_casualties
-            missile_kills
-            nuke_casualties
-            nuke_kills
-            money_looted
-            vip
-        }}
-    }}
-    """
-    return await fetch_query(query, token=token, keys=("nations", "data"))
-
-
-async def nation_bank_contents(nation: int, *, token: str = None) -> dict:
-    query = f"""
-    nations(id:{nation}, first:1) {{
-        data {{
-            money
-            coal
-            uranium
-            iron
-            bauxite
-            steel
-            gasoline
-            munitions
-            oil
-            food
-            aluminum
-        }}
-    }}
-    """
-    return await fetch_query(query, token=token, keys=("nations", "data"))
-
-
-async def alliances_pages(*, token: str = None) -> int:
-    query = """
-    alliances(first: 50) {
-        paginatorInfo {
-            lastPage
-        }
-    }
-    """
-    return await fetch_query(query, token=token, keys=("alliances", "paginatorInfo", "lastPage"))
-
-
-async def alliance_details(alliance: int, *, token: str = None) -> dict:
-    query = f"""
-    alliances(id:{alliance}, first:1) {{
-        data{{
-            id
-            name
-            acronym
-            score
-            color
-            date
-            average_score
-            accept_members
-            discord_link
-            forum_link
-            wiki_link
-            flag
-        }}
-    }}
-    """
-    return await fetch_query(query, token=token, keys=("alliances", "data"))
-
-
-async def alliance_bank_contents(alliance: int, *, token: str = None) -> dict:
-    query = f"""
-    alliances(id:{alliance}, first:1) {{
-        data {{
-            money
-            coal
-            uranium
-            iron
-            bauxite
-            steel
-            gasoline
-            munitions
-            oil
-            food
-            aluminum
-        }}
-    }}
-    """
-    return await fetch_query(query, token=token, keys=("alliances", "data"))
-
-
-async def alliance_bank_records(alliance: int, *, token: str = None) -> dict:
-    query = f"""
-    alliances(id:{alliance}, first:1) {{
-        data {{
-            bankrecs {{
-                id
-                note
-                pid
-                sid
-                rid
-                stype
-                rtype
-                money
-                coal
-                uranium
-                iron
-                bauxite
-                steel
-                gasoline
-                munitions
-                oil
-                food
-                aluminum
-            }}
-        }}
-    }}
-    """
-    return await fetch_query(query, token=token, keys=("alliances", "data", "bankrecs"))
-
-
-async def alliance_treaties(alliance: int, *, token: str = None) -> dict:
-    query = f"""
-    alliances(id:{alliance}, first:1){{
-        data{{
-            sent_treaties {{
-                id
-                date
-                treaty_type
-                turns_left
-                alliance1 {{
-                    id
-                }}
-                alliance2 {{
-                    id
-                }}
-            }}
-            received_treaties {{
-                id
-                date
-                treaty_type
-                turns_left
-                alliance1 {{
-                    id
-                }}
-                alliance2 {{
-                    id
-                }}
-            }}
-        }}
-    }}
-    """
-    return await fetch_query(query, token=token, keys=("alliances", "data"))
-
-
-async def alliance_members_details(alliance: int, *, token: str = None) -> list:
-    query = f"""
-    alliances(id:{alliance}, first:1){{
-        data{{
-            nations {{
-                id
-                alliance_position
-                nation_name
-                leader_name
-                score
-                war_policy
-                domestic_policy
-                color
-                num_cities
-                flag
-                espionage_available
-                last_active
-                date
-                soldiers
-                tanks
-                aircraft
-                ships
-                missiles
-                nukes
-                treasures {{
-                    name
-                    bonus
-                }}
-                offensive_wars {{
-                    turns_left
-                    winner
-                }}
-                defensive_wars {{
-                    turns_left
-                    winner
-                }}
-            }}
-        }}
-    }}
-    """
-    return await fetch_query(query, token=token, keys=("alliances", "data", "nations"))
