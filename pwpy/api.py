@@ -156,7 +156,6 @@ async def within_war_range(
                 "first": 100,
                 "min_scored": min_score,
                 "max_score": max_score,
-                "alliance_id": alliance,
                 "vacation_mode": False
             },
             "variables": {
@@ -187,6 +186,9 @@ async def within_war_range(
             }
         }
     }
+
+    if alliance:
+        query["nations"]["args"]["alliance_id"] = alliance
 
     targets = await get(query, token=token, keys=("nations", "data"))
 
