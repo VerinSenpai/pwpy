@@ -17,6 +17,7 @@
 
 import typing
 import math
+import api
 
 
 __all__: typing.List[str] = [
@@ -125,4 +126,4 @@ def sort_ongoing_wars(wars: list) -> list:
     :param wars: A list of wars to be iterated through. Objects must contain "turnsleft" and "winner" keys.
     :return: A list of active wars.
     """
-    return [war for war in wars if int(war["turnsleft"]) > 0 and int(war["winner"]) == 0]
+    return [war for war in wars if int(war["turns_left"]) > 0 and int(war["winner"]) == 0]
