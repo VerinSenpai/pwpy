@@ -22,7 +22,8 @@
 
 
 __all__ = [
-    "query",
+    "api",
+    "endpoints",
     "exceptions",
     "utils",
     "urls",
@@ -33,7 +34,8 @@ __all__ = [
 ]
 
 
-from pwpy import query
+from pwpy import api
+from pwpy import endpoints
 from pwpy import exceptions
 from pwpy import utils
 from pwpy import urls
