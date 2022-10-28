@@ -28,24 +28,29 @@ __all__: typing.List[str] = [
     "InvalidToken",
     "InvalidQuery",
     "UnexpectedResponse",
-    "CloudflareInterrupt",
     "LoginFailure"
 ]
 
 
-class InvalidToken(Exception):
+class PWPYException(Exception):
+    """
+    Base for all exceptions raised by this package.
+    """
+
+
+class InvalidToken(PWPYException):
     """
     Exception raised when the provided API key is invalid.
     """
 
 
-class InvalidQuery(Exception):
+class InvalidQuery(PWPYException):
     """
     Exception raised when the GraphQL query is invalid.
     """
 
 
-class UnexpectedResponse(Exception):
+class UnexpectedResponse(PWPYException):
     """
     Exception raised when the GraphQL response is unexpected.
     """
@@ -54,13 +59,7 @@ class UnexpectedResponse(Exception):
         self.response = response
 
 
-class CloudflareInterrupt(Exception):
-    """
-    Exception raised when response status not OK, likely due to cloudflare.
-    """
-
-
-class LoginFailure(Exception):
+class LoginFailure(PWPYException):
     """
     Exception raised when the provided login credentials are invalid.
     """
