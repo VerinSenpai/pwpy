@@ -23,15 +23,17 @@
 
 __all__ = [
     "api",
+    "queries",
     "exceptions",
     "utils",
     "urls",
     "scrape",
-    "__version__",
+    "__version__"
 ]
 
 
 from pwpy import api
+from pwpy import queries
 from pwpy import exceptions
 from pwpy import utils
 from pwpy import urls
