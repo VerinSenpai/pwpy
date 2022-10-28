@@ -15,7 +15,55 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from pwpy import utils
+from pwpy import utils, exceptions
+
+
+def test_parse_errors():
+    example = {"errors": [{"message": "should raise InvalidAPIKey <invalid api_key>"}]}
+    try:
+        utils.parse_errors(example)
+    except Exception as exc:
+        assert isinstance(exc, exceptions.InvalidAPIKey)
+
+    example = [{"errors": [{"message": "should raise InvalidQuery <Syntax Error>"}]}]
+    try:
+        utils.parse_errors(example)
+    except Exception as exc:
+        assert isinstance(exc, exceptions.InvalidQuery)
+
+    example = {"errors": [{"message": "should raise UnexpectedResponse <>"}]}
+    try:
+        utils.parse_errors(example)
+    except Exception as exc:
+        assert isinstance(exc, exceptions.UnexpectedResponse)
+
+    example = "should raise UnexpectedResponse"
+    try:
+        utils.parse_errors(example)
+    except Exception as exc:
+        assert isinstance(exc, exceptions.UnexpectedResponse)
+
+    example = {"data": "should raise no errors"}
+    utils.parse_errors(example)
+
+
+def test_parse_query():
+    example = {
+        "nations": {
+            "args": {"id": 34904, "first": 1},
+            "variables": {
+                "data": (
+                    "id",
+                    {"alliance": "name"}
+                ),
+                "paginatorInfo": "lastPage"
+            }
+        }
+    }
+    target = "nations(id:34904 first:1) {data {id alliance {name}} paginatorInfo {lastPage}}"
+
+    query = utils.parse_query(example)
+    assert query == target
 
 
 def test_score_range():
@@ -50,16 +98,16 @@ def test_city_cost():
 
 def test_sort_ongoing_wars():
     wars = [
-        {"turnsleft": 14, "winner": 0},
-        {"turnsleft": 20, "winner": 0},
-        {"turnsleft": 0, "winner": 100},
-        {"turnsleft": 3, "winner": 0},
-        {"turnsleft": 0, "winner": 0}
+        {"turns_left": 14, "winner": 0},
+        {"turns_left": 20, "winner": 0},
+        {"turns_left": 0, "winner": 100},
+        {"turns_left": 3, "winner": 0},
+        {"turns_left": 0, "winner": 0}
     ]
     correct = [
-        {"turnsleft": 14, "winner": 0},
-        {"turnsleft": 20, "winner": 0},
-        {"turnsleft": 3, "winner": 0}
+        {"turns_left": 14, "winner": 0},
+        {"turns_left": 20, "winner": 0},
+        {"turns_left": 3, "winner": 0}
     ]
     actual = utils.sort_ongoing_wars(wars)
     assert correct == actual
