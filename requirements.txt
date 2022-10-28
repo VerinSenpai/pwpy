@@ -1,2 +1,4 @@
 aiohttp
 beautifulsoup4
+aioresponses
+pytest-asyncio

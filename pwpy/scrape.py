@@ -30,8 +30,7 @@ import typing
 
 __all__: typing.List[str] = [
     "login",
-    "send_message",
-    "discord"
+    "send_message"
 ]
 
 
@@ -77,21 +76,3 @@ async def send_message(
 
         async with session.post(urls.MESSAGE, data=message_data):
             pass
-
-
-async def discord(nation: int) -> str or None:
-    """
-    Fetch a discord username from a given nation page.
-
-    :param nation: A valid nation id.
-    :return: The username listed on the specified nation page or None.
-    """
-    selector = 'tr > td > a[alt="Official PW Discord Server"]'
-
-    async with aiohttp.ClientSession() as session:
-        async with session.post(urls.NATION + str(nation)) as response:
-            content = await response.read()
-
-    soup = BeautifulSoup(content, features="html.parser")
-    element = soup.select_one(selector)
-    return element.text if element else None
