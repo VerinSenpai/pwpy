@@ -21,11 +21,9 @@
 # SOFTWARE.
 
 
-import typing
-
-
-__all__: typing.List[str] = [
-    "InvalidToken",
+__all__ = [
+    "PWPYException",
+    "InvalidAPIKey",
     "InvalidQuery",
     "UnexpectedResponse",
     "LoginFailure"
@@ -38,7 +36,7 @@ class PWPYException(Exception):
     """
 
 
-class InvalidToken(PWPYException):
+class InvalidAPIKey(PWPYException):
     """
     Exception raised when the provided API key is invalid.
     """
