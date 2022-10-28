@@ -15,17 +15,86 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+from pwpy import exceptions
+
 import typing
 import math
 
 
 __all__: typing.List[str] = [
+    "parse_query",
+    "parse_errors",
     "score_range",
     "infra_cost",
     "land_cost",
     "city_cost",
     "sort_ongoing_wars"
 ]
+
+
+def parse_errors(data) -> None:
+    """
+    Parse return data for errors and raise accordingly.
+    """
+
+    def interpret_errors(errors):
+        message = errors[0]["message"]
+
+        if "invalid api_key" in message:
+            raise exceptions.InvalidToken(message)
+
+        elif "Syntax Error" in message:
+            raise exceptions.InvalidQuery(message)
+
+        else:
+            raise exceptions.UnexpectedResponse(message)
+
+    if isinstance(data, dict):
+        if "errors" in data.keys():
+            interpret_errors(data["errors"])
+
+        elif "data" in data.keys():
+            return
+
+    elif isinstance(data, list):
+        interpret_errors(data[0]["errors"])
+
+    raise exceptions.UnexpectedResponse(str(data))
+
+
+def parse_query(query: dict) -> str:
+    """
+    Parse a provided dictionary into a formatted gql string.
+    """
+    def parse_variables(variables):
+        parsed = []
+
+        for section, element in variables.items():
+            if isinstance(element, str):
+                parsed.append(f"{section} {{{element}}}")
+
+            elif isinstance(element, typing.Iterable):
+                local = []
+
+                for item in element:
+                    if isinstance(item, dict):
+                        local.append(" ".join(parse_variables(item)))
+
+                    elif isinstance(item, str):
+                        local.append(item)
+
+                parsed.append(f"{section} {{{' '.join(local)}}}")
+
+        return parsed
+
+    parsed_queries = []
+
+    for name, entry in query.items():
+        parsed_args = " ".join(f"{key}:{value}" for key, value in entry["args"].items())
+        parsed_variables = " ".join(parse_variables(entry["variables"]))
+        parsed_queries.append(f"{name}({parsed_args}) {{{parsed_variables}}}")
+
+    return " ".join(parsed_queries)
 
 
 def score_range(score: float) -> typing.Tuple[float, float]:
