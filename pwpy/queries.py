@@ -34,7 +34,7 @@ async def within_war_range(
     alliance: int = None,
     powered: bool = True,
     omit_alliance: int = None,
-    api_key: str = api.API_KEY
+    token: str = api.TOKEN
 ) -> list:
     """
     Lookup all targets for a given score meeting optional criteria.
@@ -43,7 +43,7 @@ async def within_war_range(
     :param alliance: Target alliance to narrow the search. Defaults to 0.
     :param powered: Whether to discriminate against unpowered cities. Defaults to True.
     :param omit_alliance: An alliance to be omitted from search results.
-    :param api_key: A valid Politics and War API key.
+    :param token: A valid Politics and War API key.
     :return: A list of nations that fall within the provided search criteria.
     """
     min_score, max_score = utils.score_range(score)
@@ -88,7 +88,7 @@ async def within_war_range(
     if alliance:
         query["nations"]["args"]["alliance_id"] = alliance
 
-    response = await api.fetch_query(query, api_key=api_key)
+    response = await api.fetch_query(query, token=token)
     targets = response["nations"]["data"]
 
     for nation in targets[::]:
@@ -113,7 +113,7 @@ async def within_war_range(
     return targets
 
 
-async def nations_pages(*, api_key: str = api.API_KEY) -> dict:
+async def nations_pages(*, token: str = api.TOKEN) -> dict:
     query = {
         "nations": {
             "args": {"first": 500},
@@ -125,11 +125,11 @@ async def nations_pages(*, api_key: str = api.API_KEY) -> dict:
         }
     }
 
-    response = await api.fetch_query(query, api_key=api_key)
+    response = await api.fetch_query(query, token=token)
     return response["nations"]["paginatorInfo"]["lastPage"]
 
 
-async def nation_details(nation: int, *, api_key: str = api.API_KEY) -> dict:
+async def nation_details(nation: int, *, token: str = api.TOKEN) -> dict:
     query = {
         "nations": {
             "args": {"id": nation, "first": 1},
@@ -225,11 +225,11 @@ async def nation_details(nation: int, *, api_key: str = api.API_KEY) -> dict:
         }
     }
 
-    response = await api.fetch_query(query, api_key=api_key)
+    response = await api.fetch_query(query, token=token)
     return response["nations"]["data"]
 
 
-async def nation_bank_contents(nation: int, *, api_key: str = api.API_KEY) -> dict:
+async def nation_bank_contents(nation: int, *, token: str = api.TOKEN) -> dict:
     query = {
         "nations": {
             "args": {"id": nation, "first": 1},
@@ -251,11 +251,11 @@ async def nation_bank_contents(nation: int, *, api_key: str = api.API_KEY) -> di
         }
     }
 
-    response = await api.fetch_query(query, api_key=api_key)
+    response = await api.fetch_query(query, token=token)
     return response["nations"]["data"]
 
 
-async def alliances_pages(*, api_key: str = api.API_KEY) -> dict:
+async def alliances_pages(*, token: str = api.TOKEN) -> dict:
     query = {
         "nations": {
             "args": {"first": 500},
@@ -267,11 +267,11 @@ async def alliances_pages(*, api_key: str = api.API_KEY) -> dict:
         }
     }
 
-    response = await api.fetch_query(query, api_key=api_key)
+    response = await api.fetch_query(query, token=token)
     return response["alliances"]["paginatorInfo"]["lastPage"]
 
 
-async def alliance_details(alliance: int, *, api_key: str = api.API_KEY) -> dict:
+async def alliance_details(alliance: int, *, token: str = api.TOKEN) -> dict:
     query = {
         "alliances": {
             "args": {"id": alliance, "first": 1},
@@ -294,11 +294,11 @@ async def alliance_details(alliance: int, *, api_key: str = api.API_KEY) -> dict
         }
     }
 
-    response = await api.fetch_query(query, api_key=api_key)
+    response = await api.fetch_query(query, token=token)
     return response["alliances"]["data"]
 
 
-async def alliance_bank_contents(alliance: int, *, api_key: str = api.API_KEY) -> dict:
+async def alliance_bank_contents(alliance: int, *, token: str = api.TOKEN) -> dict:
     query = {
         "alliances": {
             "args": {"id": alliance, "first": 1},
@@ -320,5 +320,5 @@ async def alliance_bank_contents(alliance: int, *, api_key: str = api.API_KEY) -
         }
     }
 
-    response = await api.fetch_query(query, api_key=api_key)
+    response = await api.fetch_query(query, token=token)
     return response["alliances"]["data"]
