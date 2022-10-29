@@ -23,7 +23,7 @@ def test_parse_errors():
     try:
         utils.parse_errors(example)
     except Exception as exc:
-        assert isinstance(exc, exceptions.InvalidAPIKey)
+        assert isinstance(exc, exceptions.InvalidToken)
 
     example = [{"errors": [{"message": "should raise InvalidQuery <Syntax Error>"}]}]
     try:

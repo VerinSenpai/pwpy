@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from pwpy import urls, utils
+from pwpy import urls, utils, exceptions
 
 import asyncio
 import aiohttp
@@ -23,36 +23,39 @@ import typing
 
 
 __all__ = [
-    "set_global_key",
+    "set_token",
     "fetch_query",
     "BulkQuery"
 ]
 
 
-API_KEY = ""
+TOKEN = None
 
 
-def set_global_key(api_key: str) -> None:
+def set_token(token: str) -> None:
     """
     Set a package level api key to be used for all queries where no key is provided.
     """
-    global API_KEY
-    API_KEY = api_key
+    global TOKEN
+    TOKEN = token
 
 
-async def fetch_query(query: dict or str, *, api_key: str = API_KEY) -> typing.Any:
+async def fetch_query(query: dict or str, *, token: str = TOKEN) -> typing.Any:
     """
     Fetches a given query from the gql api using a provided api key.
 
     :param query: A query formatted as a dict.
-    :param api_key: A valid Politics and War API key.
+    :param token: A valid Politics and War API key.
     :return: A dictionary response from the server.
     """
+    if not token:
+        raise exceptions.TokenNotGiven("an api key was not provided for this request!")
+
     if isinstance(query, dict):
         query = utils.parse_query(query)
 
     async with aiohttp.ClientSession() as session:
-        async with session.post(urls.API + api_key, json={"query": f"{{{query}}}"}) as response:
+        async with session.post(urls.API + token, json={"query": f"{{{query}}}"}) as response:
             response = await response.json()
 
     utils.parse_errors(response)
@@ -83,7 +86,7 @@ class BulkQuery:
     def insert(self, query: dict) -> None:
         self._queries.append(query)
 
-    async def fetch_query(self, *, api_key: str = API_KEY, chunk_size: int = 10) -> dict:
+    async def fetch_query(self, *, token: str = TOKEN, chunk_size: int = 10) -> dict:
         results = {}
 
         chunk_size = chunk_size if chunk_size > 0 else 1
@@ -91,7 +94,7 @@ class BulkQuery:
         tasks = set()
 
         for chunk in chunks:
-            tasks.add(asyncio.create_task(fetch_query(chunk, api_key=api_key)))
+            tasks.add(asyncio.create_task(fetch_query(chunk, token=token)))
 
         response = await asyncio.gather(*tasks)
 

@@ -23,7 +23,8 @@
 
 __all__ = [
     "PWPYException",
-    "InvalidAPIKey",
+    "TokenNotGiven",
+    "InvalidToken",
     "InvalidQuery",
     "UnexpectedResponse",
     "LoginFailure"
@@ -36,7 +37,13 @@ class PWPYException(Exception):
     """
 
 
-class InvalidAPIKey(PWPYException):
+class TokenNotGiven(PWPYException):
+    """
+    Exception raised when no API key global or local is provided.
+    """
+
+
+class InvalidToken(PWPYException):
     """
     Exception raised when the provided API key is invalid.
     """
