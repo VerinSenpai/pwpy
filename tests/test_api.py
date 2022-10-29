@@ -19,7 +19,6 @@ from aioresponses import aioresponses
 from pwpy import urls, exceptions
 from pwpy import api
 
-import aiohttp
 import pytest
 
 

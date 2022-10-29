@@ -27,5 +27,5 @@ __all__ = [
 NATION: str = "https://politicsandwar.com/nation/id="
 ALLIANCE: str = "https://politicsandwar.com/alliance/id="
 MESSAGE: str = "https://politicsandwar.com/inbox/message/receiver="
-API: str = f"https://api.politicsandwar.com/graphql?api_key="
+API: str = "https://api.politicsandwar.com/graphql?api_key="
 LOGIN: str = "https://politicsandwar.com/login/"
