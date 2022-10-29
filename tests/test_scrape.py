@@ -44,5 +44,4 @@ async def test_send_message():
     with aioresponses() as mock:
         mock.post(urls.LOGIN, status=200, body="Login Successful")
         mock.post(urls.MESSAGE, status=200)
-
         await scrape.send_message("", "", "", "", "")
