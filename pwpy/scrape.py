@@ -22,7 +22,6 @@
 
 
 from pwpy import exceptions, urls
-from bs4 import BeautifulSoup
 
 import aiohttp
 import typing
