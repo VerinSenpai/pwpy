@@ -41,7 +41,7 @@ def parse_errors(data) -> None:
         message = errors[0]["message"]
 
         if "invalid api_key" in message:
-            raise exceptions.InvalidAPIKey(message)
+            raise exceptions.InvalidToken(message)
 
         elif "Syntax Error" in message:
             raise exceptions.InvalidQuery(message)
