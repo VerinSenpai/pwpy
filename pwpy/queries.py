@@ -229,6 +229,14 @@ async def nation_details(nation: int, *, token: str = api.TOKEN) -> dict:
     return response["nations"]["data"]
 
 
+async def nation_military(nation: int, *, token: str = api.TOKEN) -> dict:
+    raise NotImplementedError
+
+
+async def nation_discord(nation: int, *, token: str = api.TOKEN) -> dict:
+    raise NotImplementedError
+
+
 async def nation_bank_contents(nation: int, *, token: str = api.TOKEN) -> dict:
     query = {
         "nations": {
@@ -296,6 +304,14 @@ async def alliance_details(alliance: int, *, token: str = api.TOKEN) -> dict:
 
     response = await api.fetch_query(query, token=token)
     return response["alliances"]["data"]
+
+
+async def alliance_military(alliance: int, *, token: str = api.TOKEN) -> dict:
+    raise NotImplementedError
+
+
+async def alliance_discord(alliance: int, *, token: str = api.TOKEN) -> dict:
+    raise NotImplementedError
 
 
 async def alliance_bank_contents(alliance: int, *, token: str = api.TOKEN) -> dict:
