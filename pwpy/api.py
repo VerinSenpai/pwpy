@@ -66,8 +66,7 @@ async def fetch_query(query: dict or str, *, token: str = TOKEN) -> typing.Any:
 class BulkQuery:
 
     __slots__: typing.List = [
-        "_page_groups",
-        "_queries",
+        "_queries"
     ]
 
     def __init__(self):
