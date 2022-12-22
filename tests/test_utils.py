@@ -15,9 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from pwpy import utils, exceptions
-
-import math
+from pwpy import utils
 
 
 def test_score_range():
