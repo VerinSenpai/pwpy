@@ -7,3 +7,4 @@ dist/
 pwpy.egg-info/
 uploading.txt
 /hold.py
+.vs/
