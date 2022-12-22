@@ -16,7 +16,7 @@
 
 
 from aioresponses import aioresponses
-from pwpy import scrape, urls, exceptions
+from pwpy import scrape, exceptions
 
 import aiohttp
 import pytest
@@ -24,24 +24,30 @@ import pytest
 
 @pytest.mark.asyncio
 async def test_login():
+    login_url = "https://politicsandwar.com/login/"
+
     async with aiohttp.ClientSession() as session:
         with aioresponses() as mock:
-            mock.post(urls.LOGIN, status=200, body="Login Successful")
+            mock.post(login_url, status=200, body="Login Successful")
 
             await scrape.login("", "", session)
 
-            mock.post(urls.LOGIN, status=200, body="Login Failed")
+            mock.post(login_url, status=200, body="Login Failed")
 
             try:
                 await scrape.login("", "", session)
 
             except Exception as exc:
-                assert isinstance(exc, exceptions.LoginFailure)
+                assert isinstance(exc, exceptions.LoginInvalid)
 
 
 @pytest.mark.asyncio
 async def test_send_message():
+    login_url = "https://politicsandwar.com/login/"
+    message_url = "https://politicsandwar.com/inbox/message/"
+
     with aioresponses() as mock:
-        mock.post(urls.LOGIN, status=200, body="Login Successful")
-        mock.post(urls.MESSAGE, status=200)
+        mock.post(login_url, status=200, body="Login Successful")
+        mock.post(message_url, status=200)
+
         await scrape.send_message("", "", "", "", "")
