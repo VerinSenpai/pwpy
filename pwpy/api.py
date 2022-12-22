@@ -41,12 +41,12 @@ def _ratelimit(func):
             await asyncio.sleep(reset - time.time())
 
         try:
-            result = await func(*args, **kwargs)
+            result: dict = await func(*args, **kwargs)
 
         except exceptions.RateLimitHit as exc:
-            remaining = int(exc.headers["X-RateLimit-Remaining"])
-            reset = int(exc.headers["X-RateLimit-Reset"])
-            result = await wrapper(*args, **kwargs)
+            remaining: int = int(exc.headers["X-RateLimit-Remaining"])
+            reset: int = int(exc.headers["X-RateLimit-Reset"])
+            result: dict = await wrapper(*args, **kwargs)
 
         return result
 
