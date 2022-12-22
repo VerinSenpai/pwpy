@@ -23,6 +23,8 @@
 
 from setuptools import setup, find_packages
 
+from pwpy import __version__
+
 
 def long_description():
     with open("README.md") as fp:
@@ -31,7 +33,7 @@ def long_description():
 
 setup(
     name="pwpy",
-    version="1.0.0",
+    version=__version__,
     packages=find_packages(),
     description="A robust collection of tools, scrapers, and prebuilt api queries for Politics and War!",
     long_description=long_description(),
@@ -45,7 +47,7 @@ setup(
         "pytest-asyncio",
     ),
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Environment :: Console",
         "Framework :: AsyncIO",
         "Intended Audience :: Developers",
