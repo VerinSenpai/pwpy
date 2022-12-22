@@ -29,9 +29,11 @@ __all__ = [
     "QueryKeyError",
     "QueryMissingSubSelection",
     "RateLimitHit",
+    "ServiceUnavailable",
     "UnexpectedResponse",
     "ResponseFormatError",
-    "CloudflareError"
+    "CloudflareError",
+    "LoginInvalid"
 ]
 
 
