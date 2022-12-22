@@ -24,11 +24,37 @@
 from setuptools import setup, find_packages
 
 
+def long_description():
+    with open("README.md") as fp:
+        return fp.read()
+
+
 setup(
     name="pwpy",
     version="1.0.0",
     packages=find_packages(),
-    description="Various tools and scrapers for Politics and War and the v3 API.",
+    description="A robust collection of tools, scrapers, and prebuilt api queries for Politics and War!",
+    long_description=long_description(),
     author="Verin Senpai",
-    url="https://github.com/GodEmpressVerin/pwpy"
+    url="https://github.com/GodEmpressVerin/pwpy",
+    python_requires="3.11",
+    install_requires=(
+        "aiohttp",
+        "aioresponses",
+        "pytest",
+        "pytest-asyncio",
+    ),
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Environment :: Console",
+        "Framework :: AsyncIO",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: MIT License",
+        "Natural Language :: English",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3.11",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: Libraries :: Application Frameworks",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+    ],
 )
