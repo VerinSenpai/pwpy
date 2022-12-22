@@ -144,6 +144,7 @@ async def nation_identify(nation_id: int, api_key: str) -> dict:
     response: dict = await api.get_query(query, api_key)
     return response["nations"][0]
 
+
 async def nation_military(nation_id: int, api_key: str) -> dict:
     query: dict = {
         "field": "nations",
@@ -160,6 +161,7 @@ async def nation_military(nation_id: int, api_key: str) -> dict:
     }
     response: dict = await api.get_query(query, api_key)
     return response["nations"][0]
+
 
 async def nation_projects(nation_id: int, api_key: str) -> dict:
     query: dict = {
