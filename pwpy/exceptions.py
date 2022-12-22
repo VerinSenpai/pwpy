@@ -23,48 +23,100 @@
 
 __all__ = [
     "PWPYException",
-    "TokenNotGiven",
-    "InvalidToken",
-    "InvalidQuery",
+    "QuerySyntaxError",
+    "QueryFieldError",
+    "QueryArgumentInvalid",
+    "QueryKeyError",
+    "QueryMissingSubSelection",
+    "RateLimitHit",
     "UnexpectedResponse",
-    "LoginFailure"
+    "ResponseFormatError",
+    "CloudflareError"
 ]
 
 
 class PWPYException(Exception):
     """
-    Base for all exceptions raised by this package.
+    Exception class to be inherited by all PWPY exceptions.
     """
 
 
-class TokenNotGiven(PWPYException):
-    """
-    Exception raised when no API key global or local is provided.
-    """
-
-
-class InvalidToken(PWPYException):
-    """
-    Exception raised when the provided API key is invalid.
-    """
-
-
-class InvalidQuery(PWPYException):
+class QuerySyntaxError(PWPYException):
     """
     Exception raised when the GraphQL query is invalid.
     """
 
 
+class QueryFieldError(PWPYException):
+    """
+    Exception raised when attempting to query an invalid field or when a field is used incorrectly.
+    """
+
+
+class QueryArgumentInvalid(PWPYException):
+    """
+    Exception raised when attempting to pass an invalid argument with a query.
+    """
+
+
+class QueryKeyError(PWPYException):
+    """
+    Exception raised when the provided api key provided is invalid.
+    """
+
+
+class QueryMissingSubSelection(PWPYException):
+    """
+    Exception raised when the provided query has a field that is missing a sub selection.
+    """
+
+
+class ServiceUnavailable(PWPYException):
+    """
+    Exception raised when code 503 is returned. Note that this exception will be raised
+    if you send a large number of individual requests all at once. In this instance, try
+    slowing down.
+    """
+
+
+class RateLimitHit(PWPYException):
+    """
+    Exception raised when the rate limit is hit. This exception should be caught and handled
+    by the rate limit script.
+    """
+
+    def __init__(self, headers) -> None:
+        self.headers = headers
+
+
 class UnexpectedResponse(PWPYException):
     """
-    Exception raised when the GraphQL response is unexpected.
+    Exception raised when the error message received has no handle.
     """
 
     def __init__(self, response: str) -> None:
-        self.response = response
+        self.response: str = response
 
 
-class LoginFailure(PWPYException):
+class ResponseFormatError(PWPYException):
     """
-    Exception raised when the provided login credentials are invalid.
+    Exception raised when the response returned does not match any expected pattern.
+    """
+
+    def __init__(self, response: str) -> None:
+        self.response: str = response
+
+
+class CloudflareError(PWPYException):
+    """
+    Exception raised when Cloudflare interrupts the connection.
+    """
+
+    def __init__(self, status: int) -> None:
+        self.status: int = status
+
+
+class LoginInvalid(PWPYException):
+    """
+    Exception raised when the login credentials provided for a scrape were invalid.
     """
