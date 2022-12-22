@@ -68,7 +68,20 @@ The v3 API supports sending multiple queries at one time in the same payload. In
 same field type however, we must provide a different name for each "page". In the above code snippet, we do this
 programmatically by appending "page_{page}: " before the actual field name. In the return response, the api will only
 provide that page name, not the field that it came from. Keep this in mind if you intend to send multiple pages from
-different fields.
+different fields. 
+
+This is an example of what the query above would return:
+```
+{
+    "page_1": [
+        {"id": 34904, "nation_name": "Libaria", "leader_name": "Verin"},
+        {"id": 6, "nation_name": "Mountania", "leader_name": "Alex"}
+    ],
+    "page_2": [
+        ...
+    ]
+}
+```
 
 Also note that the BulkQuery object breaks queries up into chunks, so we don't run into issues when sending a large number
 of queries. By default, the chunk size is 10 (10 queries per request) but you can change this by specifying a different
