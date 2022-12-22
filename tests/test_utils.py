@@ -17,53 +17,7 @@
 
 from pwpy import utils, exceptions
 
-
-def test_parse_errors():
-    example = {"errors": [{"message": "should raise InvalidAPIKey <invalid api_key>"}]}
-    try:
-        utils.parse_errors(example)
-    except Exception as exc:
-        assert isinstance(exc, exceptions.InvalidToken)
-
-    example = [{"errors": [{"message": "should raise InvalidQuery <Syntax Error>"}]}]
-    try:
-        utils.parse_errors(example)
-    except Exception as exc:
-        assert isinstance(exc, exceptions.InvalidQuery)
-
-    example = {"errors": [{"message": "should raise UnexpectedResponse <>"}]}
-    try:
-        utils.parse_errors(example)
-    except Exception as exc:
-        assert isinstance(exc, exceptions.UnexpectedResponse)
-
-    example = "should raise UnexpectedResponse"
-    try:
-        utils.parse_errors(example)
-    except Exception as exc:
-        assert isinstance(exc, exceptions.UnexpectedResponse)
-
-    example = {"data": "should raise no errors"}
-    utils.parse_errors(example)
-
-
-def test_parse_query():
-    example = {
-        "nations": {
-            "args": {"id": 34904, "first": 1},
-            "variables": {
-                "data": (
-                    "id",
-                    {"alliance": "name"}
-                ),
-                "paginatorInfo": "lastPage"
-            }
-        }
-    }
-    target = "nations(id:34904 first:1) {data {id alliance {name}} paginatorInfo {lastPage}}"
-
-    query = utils.parse_query(example)
-    assert query == target
+import math
 
 
 def test_score_range():
