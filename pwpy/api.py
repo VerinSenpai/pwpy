@@ -44,8 +44,8 @@ def _ratelimit(func):
             result: dict = await func(*args, **kwargs)
 
         except exceptions.RateLimitHit as exc:
-            remaining: int = int(exc.headers["X-RateLimit-Remaining"])
-            reset: int = int(exc.headers["X-RateLimit-Reset"])
+            remaining = int(exc.headers["X-RateLimit-Remaining"])
+            reset = int(exc.headers["X-RateLimit-Reset"])
             result: dict = await wrapper(*args, **kwargs)
 
         return result

@@ -23,8 +23,6 @@
 
 from pwpy import api
 
-import asyncio
-
 
 async def key_details(api_key: str) -> dict:
     query: dict = {
