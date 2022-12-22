@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 
-from pwpy import exceptions, urls
+from pwpy import exceptions
 
 import aiohttp
 import typing
@@ -41,11 +41,13 @@ async def login(email: str, password: str, session: aiohttp.ClientSession) -> No
     :param password: A valid password for logging in with.
     :param session: A client session to login on.
     """
-    login_data = {"email": email, "password": password, "loginform": "Login"}
+    login_data: dict = {"email": email, "password": password, "loginform": "Login"}
 
-    async with session.post(urls.LOGIN, data=login_data) as response:
-        if "Login Successful" not in str(await response.read()):
-            raise exceptions.LoginFailure("The provided login credentials were invalid!")
+    async with session.post("https://politicsandwar.com/login/", data=login_data) as response:
+        page_content: str = await response.text()
+
+        if "Login Successful" not in page_content:
+            raise exceptions.LoginInvalid("The provided login credentials were invalid!")
 
 
 async def send_message(
@@ -61,7 +63,7 @@ async def send_message(
     :param message: The message content to be sent.
     :return: None
     """
-    message_data = {
+    message_data: dict = {
         "newconversation": "true",
         "receiver": target,
         "carboncopy": "",
@@ -73,5 +75,5 @@ async def send_message(
     async with aiohttp.ClientSession() as session:
         await login(email, password, session)
 
-        async with session.post(urls.MESSAGE, data=message_data):
+        async with session.post("https://politicsandwar.com/inbox/message/", data=message_data):
             pass
