@@ -1,340 +1,193 @@
-# This is part of Requiem
-# Copyright (C) 2020  God Empress Verin
-
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-
-from pwpy import api, utils
-
-
-__all__ = [
-    "within_war_range",
-    "nations_pages",
-    "nation_details",
-    "nation_bank_contents",
-    "alliances_pages",
-    "alliance_details",
-    "alliance_bank_contents"
-]
+# MIT License
+#
+# Copyright (c) 2021 God Empress Verin
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
 
-async def within_war_range(
-    score: int, *,
-    alliance: int = None,
-    powered: bool = True,
-    omit_alliance: int = None,
-    token: str = api.TOKEN
-) -> list:
-    """
-    Lookup all targets for a given score meeting optional criteria.
+from pwpy import api
 
-    :param score: Score to be calculated with.
-    :param alliance: Target alliance to narrow the search. Defaults to 0.
-    :param powered: Whether to discriminate against unpowered cities. Defaults to True.
-    :param omit_alliance: An alliance to be omitted from search results.
-    :param token: A valid Politics and War API key.
-    :return: A list of nations that fall within the provided search criteria.
-    """
-    min_score, max_score = utils.score_range(score)
+import asyncio
 
-    query = {
-        "nations": {
-            "args": {
-                "first": 100,
-                "min_scored": min_score,
-                "max_score": max_score,
-                "vacation_mode": False
-            },
-            "variables": {
-                "data": {
-                    "id",
-                    "nation_name",
-                    "leader_name",
-                    "color",
-                    "alliance_id",
-                    "alliance_position",
-                    {"alliance": ("name", "score")},
-                    "war_policy",
-                    "flag",
-                    "num_cities",
-                    "score",
-                    "espionage_available",
-                    "last_active",
-                    "soldiers",
-                    "tanks",
-                    "aircraft",
-                    "ships",
-                    "missiles",
-                    "nukes",
-                    {"cities": "powered"},
-                    {"offensive_wars": ("id", "winner", "turns_left")},
-                    {"defensive_wars": ("id", "winner", "turns_left")}
-                }
-            }
-        }
+
+async def key_details(api_key: str) -> dict:
+    query: dict = {
+        "field": "me",
+        "data": (
+            {"nation": "id"},
+            "key",
+            "requests",
+            "max_requests"
+        )
     }
-
-    if alliance:
-        query["nations"]["args"]["alliance_id"] = alliance
-
-    response = await api.fetch_query(query, token=token)
-    targets = response["nations"]["data"]
-
-    for nation in targets[::]:
-        ongoing = utils.sort_ongoing_wars(nation["defensive_wars"])
-        if nation["alliance_id"] == omit_alliance:
-            targets.remove(nation)
-
-        elif nation["color"] == "beige":
-            targets.remove(nation)
-
-        elif len(ongoing) == 3:
-            targets.remove(nation)
-
-        elif powered:
-            for city in nation["cities"]:
-                if city["powered"]:
-                    continue
-
-                targets.remove(nation)
-                break
-
-    return targets
+    response: dict = await api.get_query(query, api_key)
+    return response
 
 
-async def nations_pages(*, token: str = api.TOKEN) -> dict:
-    query = {
-        "nations": {
-            "args": {"first": 500},
-            "variables": {
-                "paginatorInfo": {
-                    "lastPage"
-                }
+async def game_info(api_key: str) -> dict:
+    query: dict = {
+        "field": "game_info",
+        "data": (
+            "game_date",
+            {
+                "radiation": (
+                    "global",
+                    "north_america",
+                    "south_america",
+                    "europe",
+                    "africa",
+                    "asia",
+                    "australia",
+                    "antarctica"
+                )
             }
-        }
+        )
     }
+    response: dict = await api.get_query(query, api_key)
+    return response
 
-    response = await api.fetch_query(query, token=token)
+
+async def nations_pages(api_key: str, length: int = 500) -> int:
+    query: dict = {
+        "field": "nations",
+        "args": {"first": length},
+        "data": {"paginatorInfo": "lastPage"}
+    }
+    response: dict = await api.get_query(query, api_key)
     return response["nations"]["paginatorInfo"]["lastPage"]
 
 
-async def nation_details(nation: int, *, token: str = api.TOKEN) -> dict:
-    query = {
-        "nations": {
-            "args": {"id": nation, "first": 1},
-            "variables": {
-                "data": {
-                    "id",
-                    "nation_name",
-                    "leader_name",
-                    "alliance_id",
-                    "alliance_position",
-                    "alliance_position_info",
-                    "alliance",
-                    "continent",
-                    "war_policy",
-                    "domestic_policy",
-                    "color",
-                    "num_cities",
-                    "score",
-                    "update_tz",
-                    "population",
-                    "flag",
-                    "vacation_mode_turns",
-                    "beige_turns",
-                    "espionage_available",
-                    "last_active",
-                    "date",
-                    "soldiers",
-                    "tanks",
-                    "aircraft",
-                    "missiles",
-                    "nukes",
-                    "discord",
-                    "discord_id",
-                    "turns_since_last_city",
-                    "turns_since_last_project",
-                    "projects",
-                    "project_bits",
-                    "iron_works",
-                    "bauxite_works",
-                    "arms_stockpile",
-                    "emergency_gasoline_reserve",
-                    "mass_irrigation",
-                    "international_trade_center",
-                    "missile_launch_pad",
-                    "nuclear_research_facility",
-                    "iron_dome",
-                    "vital_defense_system",
-                    "central_intelligence_agency",
-                    "center_for_civil_engineering",
-                    "propaganda_bureau",
-                    "uranium_enrichment_program",
-                    "urban_planning",
-                    "advanced_urban_planning",
-                    "space_program",
-                    "spy_satellite",
-                    "moon_landing",
-                    "pirate_economy",
-                    "recycling_initiative",
-                    "telecommunications_satellite",
-                    "green_technologies",
-                    "arable_land_agency",
-                    "clinical_research_center",
-                    "specialized_police_training_program",
-                    "advanced_engineering_corps",
-                    "government_support_agency",
-                    "research_and_development_center",
-                    "resource_production_center",
-                    "metropolitan_planning",
-                    "military_salvage",
-                    "fallout_shelter",
-                    "wars_won",
-                    "wars_lost",
-                    "tax_id",
-                    "alliance_seniority",
-                    "gross_national_income",
-                    "gross_domestic_product",
-                    "soldier_casualties",
-                    "soldier_kills",
-                    "tank_casualties",
-                    "tank_kills",
-                    "aircraft_casualties",
-                    "aircraft_kills",
-                    "ship_casualties",
-                    "ship_kills",
-                    "missile_casualties",
-                    "missile_kills",
-                    "nuke_casualties",
-                    "nuke_kills",
-                    "money_looted",
-                    "vip"
-                }
-            }
+async def nation_identifiers(api_key: str, length: int = 500) -> list:
+    bulk_query: api.BulkQuery = api.BulkQuery(api_key, chunk_size=100)
+    pages: int = await nations_pages(api_key, length)
+
+    for page in range(1, pages + 1):
+        query: dict = {
+            "field": f"page_{page}: nations",
+            "args": {"first": length, "page": page},
+            "data": {"data": ("id", "nation_name", "leader_name")}
         }
+        bulk_query.insert(query)
+
+    results = await bulk_query.get()
+
+    return [item for key, data in results.items() for item in data["data"]]
+
+
+async def nation_all(nation_id: int, api_key: str) -> dict:
+    ...
+
+
+async def nation_identify(nation_id: int, api_key: str) -> dict:
+    ...
+
+
+async def nation_military(nation_id: int, api_key: str) -> dict:
+    ...
+
+
+async def nation_projects(nation_id: int, api_key: str) -> dict:
+    ...
+
+
+async def nation_vault(nation_id: int, api_key: str) -> dict:
+    ...
+
+
+async def nation_war_stats(nation_id: int, api_key: str) -> dict:
+    ...
+
+
+async def nation_wars(nation_id: int, api_key: str) -> dict:
+    ...
+
+
+async def nation_alliance(nation_id: int, api_key: str) -> dict:
+    ...
+
+
+async def alliances_pages(api_key: str, length: int = 50) -> int:
+    query: dict = {
+        "field": "alliances",
+        "args": {"first": length},
+        "data": {"paginatorInfo": "lastPage"}
     }
-
-    response = await api.fetch_query(query, token=token)
-    return response["nations"]["data"]
-
-
-async def nation_military(nation: int, *, token: str = api.TOKEN) -> dict:
-    raise NotImplementedError
-
-
-async def nation_discord(nation: int, *, token: str = api.TOKEN) -> dict:
-    raise NotImplementedError
-
-
-async def nation_bank_contents(nation: int, *, token: str = api.TOKEN) -> dict:
-    query = {
-        "nations": {
-            "args": {"id": nation, "first": 1},
-            "variables": {
-                "data": {
-                    "money",
-                    "coal",
-                    "uranium",
-                    "iron",
-                    "bauxite",
-                    "steel",
-                    "gasoline",
-                    "munitions",
-                    "oil",
-                    "food",
-                    "aluminum"
-                }
-            }
-        }
-    }
-
-    response = await api.fetch_query(query, token=token)
-    return response["nations"]["data"]
-
-
-async def alliances_pages(*, token: str = api.TOKEN) -> dict:
-    query = {
-        "nations": {
-            "args": {"first": 500},
-            "variables": {
-                "paginatorInfo": {
-                    "lastPage"
-                }
-            }
-        }
-    }
-
-    response = await api.fetch_query(query, token=token)
+    response: dict = await api.get_query(query, api_key)
     return response["alliances"]["paginatorInfo"]["lastPage"]
 
 
-async def alliance_details(alliance: int, *, token: str = api.TOKEN) -> dict:
-    query = {
-        "alliances": {
-            "args": {"id": alliance, "first": 1},
-            "variables": {
-                "data": {
-                    "id",
-                    "name",
-                    "acronym",
-                    "score",
-                    "color",
-                    "date",
-                    "average_score",
-                    "accept_members",
-                    "discord_link",
-                    "forum_link",
-                    "wiki_link",
-                    "flag"
-                }
-            }
+async def alliance_identifiers(api_key: str, length: int = 50) -> list:
+    bulk_query: api.BulkQuery = api.BulkQuery(api_key, chunk_size=100)
+    pages: int = await alliances_pages(api_key, length)
+
+    for page in range(1, pages + 1):
+        query: dict = {
+            "field": f"page_{page}: alliances",
+            "args": {"first": length, "page": page},
+            "data": {"data": ("id", "name", "acronym")}
         }
-    }
+        bulk_query.insert(query)
 
-    response = await api.fetch_query(query, token=token)
-    return response["alliances"]["data"]
+    results = await bulk_query.get()
 
-
-async def alliance_military(alliance: int, *, token: str = api.TOKEN) -> dict:
-    raise NotImplementedError
+    return [item for key, data in results.items() for item in data["data"]]
 
 
-async def alliance_discord(alliance: int, *, token: str = api.TOKEN) -> dict:
-    raise NotImplementedError
+async def alliance_all(alliance_id: int, api_key: str) -> dict:
+    ...
 
 
-async def alliance_bank_contents(alliance: int, *, token: str = api.TOKEN) -> dict:
-    query = {
-        "alliances": {
-            "args": {"id": alliance, "first": 1},
-            "variables": {
-                "data": {
-                    "money",
-                    "coal",
-                    "uranium",
-                    "iron",
-                    "bauxite",
-                    "steel",
-                    "gasoline",
-                    "munitions",
-                    "oil",
-                    "food",
-                    "aluminum"
-                }
-            }
-        }
-    }
+async def alliance_identify(alliance_id: int, api_key: str) -> dict:
+    ...
 
-    response = await api.fetch_query(query, token=token)
-    return response["alliances"]["data"]
+
+async def alliance_treaties(alliance_id: int, api_key: str) -> dict:
+    ...
+
+
+async def alliance_wars(alliance_id: int, api_key: str) -> dict:
+    ...
+
+
+async def alliance_members_identifiers(alliance_id: int, api_key: str) -> dict:
+    ...
+
+
+async def alliance_members_vault(alliance_id: int, api_key: str) -> dict:
+    ...
+
+
+async def alliance_members_military(alliance_id: int, api_key: str) -> dict:
+    ...
+
+
+async def alliance_tax_brackets(alliance_id: int, api_key: str) -> dict:
+    ...
+
+
+async def alliance_tax_records(alliance_id: int, api_key: str) -> dict:
+    ...
+
+
+async def alliance_bank_contents(alliance_id: int, api_key: str) -> dict:
+    ...
+
+
+async def alliance_bank_records(alliance_id: int, api_key: str) -> dict:
+    ...
