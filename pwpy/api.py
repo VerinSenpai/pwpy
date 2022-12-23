@@ -183,14 +183,13 @@ class BulkQuery:
     """
     Build and request chunks of multiple queries.
     """
-    def __init__(self, api_key: str, *, payloads: typing.Optional[list] = None, chunk_size: int = 10):
+    def __init__(self, api_key: str, *, chunk_size: int = 10):
         """
         :param api_key: A valid Politics And War API key.
-        :param payloads: A list of dicts which can be converted to GQL strings.
         :param chunk_size: The number of queries to send in each payload.
         """
         self._api_key: str = api_key
-        self._payloads: list = payloads or []
+        self._queries: list = []
         self._chunk_size: int = chunk_size
 
     @property
@@ -200,7 +199,7 @@ class BulkQuery:
 
         :return: Groups of joined GQL query strings.
         """
-        payloads: list = self._payloads
+        payloads: list = self._queries
         chunk_size: int = self._chunk_size
 
         for count in range(0, len(payloads), chunk_size):
@@ -211,13 +210,13 @@ class BulkQuery:
 
             yield "\n".join(chunk)
 
-    def insert(self, query: dict or str) -> None:
+    def insert(self, query: typing.Union[dict, str]) -> None:
         """
-        Attach a query to the bulk query request.
+        Attach a query or list of queries to the bulk query request.
 
         :param query: A properly formatted GQL string or a dict that can be converted into a GQL string.
         """
-        self._payloads.append(query)
+        self._queries.append(query)
 
     async def get(self) -> dict:
         """
