@@ -25,6 +25,12 @@ from pwpy import api
 
 
 async def key_details(api_key: str) -> dict:
+    """
+    Fetch information about the API key used to make this request.
+
+    :param api_key: A valid Politics And War API key.
+    :return: A dict containing the requested information.
+    """
     query: dict = {
         "field": "me",
         "data": (
@@ -39,6 +45,12 @@ async def key_details(api_key: str) -> dict:
 
 
 async def game_info(api_key: str) -> dict:
+    """
+    Fetch the current game date and all radiation levels.
+
+    :param api_key: A valid Politics And War API key.
+    :return: A dict containing the requested information.
+    """
     query: dict = {
         "field": "game_info",
         "data": (
@@ -62,6 +74,13 @@ async def game_info(api_key: str) -> dict:
 
 
 async def nations_pages(api_key: str, length: int = 500) -> int:
+    """
+    Fetch the current number of pages for the nations' endpoint.
+
+    :param api_key: A valid Politics And War API key.
+    :param length: The desired length of each page. MAX 500.
+    :return: A number representing how many nations pages there are.
+    """
     query: dict = {
         "field": "nations",
         "args": {"first": length},
@@ -72,6 +91,13 @@ async def nations_pages(api_key: str, length: int = 500) -> int:
 
 
 async def nation_identifiers(api_key: str, length: int = 500) -> list:
+    """
+    Fetch the id, name, and leader of every nation.
+
+    :param api_key: A valid Politics And War API key.
+    :param length: The desired length of each page. MAX 500.
+    :return: A list of dicts containing the id, name, and leader of all nations.
+    """
     bulk_query: api.BulkQuery = api.BulkQuery(api_key, chunk_size=100)
     pages: int = await nations_pages(api_key, length)
 
@@ -89,6 +115,134 @@ async def nation_identifiers(api_key: str, length: int = 500) -> list:
 
 
 async def nation_all(nation_id: int, api_key: str) -> dict:
+    """
+    Fetch all non-subfield information about a specified nation.
+
+    :param nation_id: the id of the nation to be looked up.
+    :param api_key: A valid Politics And War API key.
+    :return: A dict containing the requested information.
+    """
+    query: dict = {
+        "field": "nations",
+        "args": {"id": nation_id},
+        "data": (
+            "id",
+            "nation_name",
+            "leader_name",
+            "discord",
+            "discord_id",
+            "alliance_id",
+            "alliance_position",
+            "alliance_position_id",
+            "alliance_seniority",
+            "continent",
+            "war_policy",
+            "domestic_policy",
+            "color",
+            "num_cities",
+            "score",
+            "update_tz",
+            "population",
+            "flag",
+            "vacation_mode_turns",
+            "beige_turns",
+            "espionage_available",
+            "last_active",
+            "date",
+            "turns_since_last_city",
+            "turns_since_last_project",
+            "tax_id",
+            "baseball_team",
+            "gross_national_income",
+            "gross_domestic_product",
+            "vip"
+            "soldiers",
+            "tanks",
+            "aircraft",
+            "ships",
+            "missiles",
+            "nukes",
+            "spies"
+            "projects",
+            "project_bits",
+            "iron_works",
+            "bauxite_works",
+            "arms_stockpile",
+            "emergency_gasoline_reserve",
+            "mass_irrigation",
+            "international_trade_center",
+            "missile_launch_pad",
+            "nuclear_research_facility",
+            "iron_dome",
+            "vital_defense_system",
+            "central_intelligence_agency",
+            "center_for_civil_engineering",
+            "propaganda_bureau",
+            "uranium_enrichment_program",
+            "urban_planning",
+            "advanced_urban_planning",
+            "space_program",
+            "spy_satellite",
+            "moon_landing",
+            "pirate_economy",
+            "recycling_initiative",
+            "telecommunications_satellite",
+            "green_technologies",
+            "arable_land_agency",
+            "clinical_research_center",
+            "specialized_police_training_program",
+            "advanced_engineering_corps",
+            "government_support_agency",
+            "research_and_development_center",
+            "resource_production_center",
+            "metropolitan_planning",
+            "military_salvage",
+            "fallout_shelter"
+            "money",
+            "coal",
+            "oil",
+            "uranium",
+            "iron",
+            "bauxite",
+            "lead",
+            "gasoline",
+            "munitions",
+            "steel",
+            "aluminum",
+            "food",
+            "credits"
+            "wars_won",
+            "wars_lost",
+            "soldier_casualties",
+            "soldier_kills",
+            "tank_casualties",
+            "tank_kills",
+            "aircraft_casualties",
+            "aircraft_kills",
+            "ship_casualties",
+            "ship_kills",
+            "missile_casualties",
+            "missile_kills",
+            "nuke_casualties",
+            "nuke_kills",
+            "spy_casualties",
+            "spy_kills",
+            "spy_attacks",
+            "money_looted"
+        )
+    }
+    response: dict = await api.get_query(query, api_key)
+    return response["nations"][0]
+
+
+async def nation_basic(nation_id: int, api_key: str) -> dict:
+    """
+    Fetch basic non-subfield information about a specified nation.
+
+    :param nation_id: the id of the nation to be looked up.
+    :param api_key: A valid Politics And War API key.
+    :return: A dict containing the requested information.
+    """
     query: dict = {
         "field": "nations",
         "args": {"id": nation_id},
@@ -130,6 +284,13 @@ async def nation_all(nation_id: int, api_key: str) -> dict:
 
 
 async def nation_identify(nation_id: int, api_key: str) -> dict:
+    """
+    Fetch the id, name, and leader of a specified nation.
+
+    :param nation_id: the id of the nation to be looked up.
+    :param api_key: A valid Politics And War API key.
+    :return: A dict containing the requested information.
+    """
     query: dict = {
         "field": "nations",
         "args": {"id": nation_id},
@@ -144,6 +305,13 @@ async def nation_identify(nation_id: int, api_key: str) -> dict:
 
 
 async def nation_military(nation_id: int, api_key: str) -> dict:
+    """
+    Fetch the military of a specified nation.
+
+    :param nation_id: the id of the nation to be looked up.
+    :param api_key: A valid Politics And War API key.
+    :return: A dict containing the requested information.
+    """
     query: dict = {
         "field": "nations",
         "args": {"id": nation_id},
@@ -162,6 +330,13 @@ async def nation_military(nation_id: int, api_key: str) -> dict:
 
 
 async def nation_projects(nation_id: int, api_key: str) -> dict:
+    """
+    Fetch the projects of a specified nation.
+
+    :param nation_id: the id of the nation to be looked up.
+    :param api_key: A valid Politics And War API key.
+    :return: A dict containing the requested information.
+    """
     query: dict = {
         "field": "nations",
         "args": {"id": nation_id},
@@ -208,6 +383,13 @@ async def nation_projects(nation_id: int, api_key: str) -> dict:
 
 
 async def nation_vault(nation_id: int, api_key: str) -> dict:
+    """
+    Fetch the warchest of a specified nation. You must be authorized to view this information.
+
+    :param nation_id: the id of the nation to be looked up.
+    :param api_key: A valid Politics And War API key.
+    :return: A dict containing the requested information.
+    """
     query: dict = {
         "field": "nations",
         "args": {"id": nation_id},
@@ -232,6 +414,13 @@ async def nation_vault(nation_id: int, api_key: str) -> dict:
 
 
 async def nation_war_stats(nation_id: int, api_key: str) -> dict:
+    """
+    Fetch the war stats of a specified nation.
+
+    :param nation_id: the id of the nation to be looked up.
+    :param api_key: A valid Politics And War API key.
+    :return: A dict containing the requested information.
+    """
     query: dict = {
         "field": "nations",
         "args": {"id": nation_id},
@@ -260,7 +449,14 @@ async def nation_war_stats(nation_id: int, api_key: str) -> dict:
     return response["nations"][0]
 
 
-async def nation_wars(nation_id: int, api_key: str) -> dict:
+async def nation_wars(nation_id: int, api_key: str) -> list:
+    """
+    Fetch all recent and ongoing wars for a specified nation.
+
+    :param nation_id: the id of the nation to be looked up.
+    :param api_key: A valid Politics And War API key.
+    :return: A list of wars.
+    """
     query: dict = {
         "field": "nations",
         "args": {"id": nation_id},
@@ -321,6 +517,13 @@ async def nation_wars(nation_id: int, api_key: str) -> dict:
 
 
 async def alliances_pages(api_key: str, length: int = 50) -> int:
+    """
+    Fetch the current number of pages for the alliances' endpoint.
+
+    :param api_key: A valid Politics And War API key.
+    :param length: The desired length of each page. MAX 50.
+    :return: A number representing how many alliances pages there are.
+    """
     query: dict = {
         "field": "alliances",
         "args": {"first": length},
@@ -331,6 +534,13 @@ async def alliances_pages(api_key: str, length: int = 50) -> int:
 
 
 async def alliance_identifiers(api_key: str, length: int = 50) -> list:
+    """
+    Fetch the id, name, and acronym of every alliance.
+
+    :param api_key: A valid Politics And War API key.
+    :param length: The desired length of each page. MAX 50.
+    :return: A list of dicts containing the id, name, and leader of all nations
+    """
     bulk_query: api.BulkQuery = api.BulkQuery(api_key, chunk_size=100)
     pages: int = await alliances_pages(api_key, length)
 
@@ -348,6 +558,13 @@ async def alliance_identifiers(api_key: str, length: int = 50) -> list:
 
 
 async def alliance_all(alliance_id: int, api_key: str) -> dict:
+    """
+    Fetch all non-subfield information about a specified alliance.
+
+    :param alliance_id: the id of the alliance to be looked up.
+    :param api_key: A valid Politics And War API key.
+    :return: A dict containing the requested information.
+    """
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
@@ -373,6 +590,13 @@ async def alliance_all(alliance_id: int, api_key: str) -> dict:
 
 
 async def alliance_identify(alliance_id: int, api_key: str) -> dict:
+    """
+    Fetch the id, name, and leader of a specified alliance.
+
+    :param alliance_id: the id of the alliance to be looked up.
+    :param api_key: A valid Politics And War API key.
+    :return: A dict containing the requested information.
+    """
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
@@ -389,6 +613,13 @@ async def alliance_identify(alliance_id: int, api_key: str) -> dict:
 
 
 async def alliance_treaties(alliance_id: int, api_key: str) -> dict:
+    """
+    Fetch the active treaties of a specified alliance.
+
+    :param alliance_id: the id of the alliance to be looked up.
+    :param api_key: A valid Politics And War API key.
+    :return: A dict containing the requested information.
+    """
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
@@ -413,6 +644,13 @@ async def alliance_treaties(alliance_id: int, api_key: str) -> dict:
 
 
 async def alliance_wars(alliance_id: int, api_key: str) -> dict:
+    """
+    Fetch all recent and ongoing wars for a specified alliance.
+
+    :param alliance_id: the id of the alliance to be looked up.
+    :param api_key: A valid Politics And War API key.
+    :return: A dict containing the requested information.
+    """
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
@@ -479,6 +717,13 @@ async def alliance_wars(alliance_id: int, api_key: str) -> dict:
 
 
 async def alliance_members_identifiers(alliance_id: int, api_key: str) -> dict:
+    """
+    Fetch all ids, names, and leaders of members of a specified alliance.
+
+    :param alliance_id: the id of the alliance to be looked up.
+    :param api_key: A valid Politics And War API key.
+    :return: A dict containing the requested information.
+    """
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
@@ -499,6 +744,13 @@ async def alliance_members_identifiers(alliance_id: int, api_key: str) -> dict:
 
 
 async def alliance_members_vault(alliance_id: int, api_key: str) -> dict:
+    """
+    Fetch alliance member warchests. Must be authorized to do this normally.
+
+    :param alliance_id: the id of the alliance to be looked up.
+    :param api_key: A valid Politics And War API key.
+    :return: A dict containing the requested information.
+    """
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
@@ -530,6 +782,13 @@ async def alliance_members_vault(alliance_id: int, api_key: str) -> dict:
 
 
 async def alliance_members_military(alliance_id: int, api_key: str) -> dict:
+    """
+    Fetch the military of all members of a specified nation.
+
+    :param alliance_id: the id of the alliance to be looked up.
+    :param api_key: A valid Politics And War API key.
+    :return: A dict containing the requested information.
+    """
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
@@ -555,6 +814,13 @@ async def alliance_members_military(alliance_id: int, api_key: str) -> dict:
 
 
 async def alliance_tax_brackets(alliance_id: int, api_key: str) -> dict:
+    """
+    Fetch all tax brackets for a specified alliance. Must be authorized to do this normally.
+
+    :param alliance_id: the id of the alliance to be looked up.
+    :param api_key: A valid Politics And War API key.
+    :return: A dict containing the requested information.
+    """
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
@@ -596,6 +862,13 @@ async def alliance_tax_brackets(alliance_id: int, api_key: str) -> dict:
 
 
 async def alliance_tax_records(alliance_id: int, api_key: str) -> dict:
+    """
+    Fetch all tax records for a specified alliance.
+
+    :param alliance_id: the id of the alliance to be looked up.
+    :param api_key: A valid Politics And War API key.
+    :return: A dict containing the requested information.
+    """
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
@@ -623,6 +896,13 @@ async def alliance_tax_records(alliance_id: int, api_key: str) -> dict:
 
 
 async def alliance_bank_contents(alliance_id: int, api_key: str) -> dict:
+    """
+    Fetch alliance bank contents. Must be authorized to do this normally.
+
+    :param alliance_id: the id of the alliance to be looked up.
+    :param api_key: A valid Politics And War API key.
+    :return: A dict containing the requested information.
+    """
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
@@ -648,6 +928,13 @@ async def alliance_bank_contents(alliance_id: int, api_key: str) -> dict:
 
 
 async def alliance_bank_records(alliance_id: int, api_key: str) -> dict:
+    """
+    Fetch alliance bank records.
+
+    :param alliance_id: the id of the alliance to be looked up.
+    :param api_key: A valid Politics And War API key.
+    :return: A dict containing the requested information.
+    """
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
