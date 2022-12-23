@@ -29,6 +29,12 @@ import asyncio
 import time
 
 
+__all__: typing.List[str] = [
+    "get_query",
+    "BulkQuery"
+]
+
+
 def _ratelimit(func):
     remaining: int = 0
     reset: int = 0
