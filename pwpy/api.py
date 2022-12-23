@@ -113,7 +113,7 @@ def _convert_dict_to_query(query_data: typing.Union[str, dict]) -> str:
         converted_args: str = ' '.join(_convert_args_to_string(query_args))
         converted_query += f"({converted_args})"
 
-    if query_fields := query_data.get("data"):
+    if query_fields := query_data.get("return"):
         converted_fields: str = ' '.join(_convert_fields_to_string(query_fields))
         converted_query += f"{{{converted_fields}}}"
 
