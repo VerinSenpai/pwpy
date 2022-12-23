@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 
-from pwpy import api
+from pwpy import api, utils
 
 
 async def key_details(api_key: str) -> dict:
@@ -33,7 +33,7 @@ async def key_details(api_key: str) -> dict:
     """
     query: dict = {
         "field": "me",
-        "data": (
+        "return": (
             {"nation": "id"},
             "key",
             "requests",
@@ -53,7 +53,7 @@ async def game_info(api_key: str) -> dict:
     """
     query: dict = {
         "field": "game_info",
-        "data": (
+        "return": (
             "game_date",
             {
                 "radiation": (
@@ -73,6 +73,89 @@ async def game_info(api_key: str) -> dict:
     return response
 
 
+async def within_war_range(
+    api_key: str,
+    score: int, *,
+    alliance: int = None,
+    powered: bool = True,
+    omit_alliance: int = None,
+) -> list:
+    """
+    Lookup all targets for a given score meeting optional criteria.
+
+    :param api_key: A valid Politics and War API key.
+    :param score: Score to be calculated with.
+    :param alliance: Target alliance to narrow the search. Defaults to 0.
+    :param powered: Whether to discriminate against unpowered cities. Defaults to True.
+    :param omit_alliance: An alliance to be omitted from search results.
+    :return: A list of nations that fall within the provided search criteria.
+    """
+    min_score, max_score = utils.score_range(score)
+
+    query = {
+        "field": "nations",
+        "args": {
+            "first": 100,
+            "min_scored": min_score,
+            "max_score": max_score,
+            "vacation_mode": False
+        },
+        "return": {
+            "data": {
+                "id",
+                "nation_name",
+                "leader_name",
+                "color",
+                "alliance_id",
+                "alliance_position",
+                {"alliance": ("name", "score")},
+                "war_policy",
+                "flag",
+                "num_cities",
+                "score",
+                "espionage_available",
+                "last_active",
+                "soldiers",
+                "tanks",
+                "aircraft",
+                "ships",
+                "missiles",
+                "nukes",
+                {"cities": "powered"},
+                {"offensive_wars": ("id", "winner", "turns_left")},
+                {"defensive_wars": ("id", "winner", "turns_left")}
+            }
+        }
+    }
+
+    if alliance:
+        query["nations"]["args"]["alliance_id"] = alliance
+
+    response = await api.get_query(query, api_key)
+    targets = response["nations"]["data"]
+
+    for nation in targets[::]:
+        ongoing = utils.sort_ongoing_wars(nation["defensive_wars"])
+        if nation["alliance_id"] == omit_alliance:
+            targets.remove(nation)
+
+        elif nation["color"] == "beige":
+            targets.remove(nation)
+
+        elif len(ongoing) == 3:
+            targets.remove(nation)
+
+        elif powered:
+            for city in nation["cities"]:
+                if city["powered"]:
+                    continue
+
+                targets.remove(nation)
+                break
+
+    return targets
+
+
 async def nations_pages(api_key: str, length: int = 500) -> int:
     """
     Fetch the current number of pages for the nations' endpoint.
@@ -84,7 +167,7 @@ async def nations_pages(api_key: str, length: int = 500) -> int:
     query: dict = {
         "field": "nations",
         "args": {"first": length},
-        "data": {"paginatorInfo": "lastPage"}
+        "return": {"paginatorInfo": "lastPage"}
     }
     response: dict = await api.get_query(query, api_key)
     return response["nations"]["paginatorInfo"]["lastPage"]
@@ -105,7 +188,7 @@ async def nation_identifiers(api_key: str, length: int = 500) -> list:
         query: dict = {
             "field": f"page_{page}: nations",
             "args": {"first": length, "page": page},
-            "data": {"data": ("id", "nation_name", "leader_name")}
+            "return": {"data": ("id", "nation_name", "leader_name")}
         }
         bulk_query.insert(query)
 
@@ -125,7 +208,7 @@ async def nation_all(nation_id: int, api_key: str) -> dict:
     query: dict = {
         "field": "nations",
         "args": {"id": nation_id},
-        "data": (
+        "return": (
             "id",
             "nation_name",
             "leader_name",
@@ -246,7 +329,7 @@ async def nation_basic(nation_id: int, api_key: str) -> dict:
     query: dict = {
         "field": "nations",
         "args": {"id": nation_id},
-        "data": (
+        "return": (
             "id",
             "nation_name",
             "leader_name",
@@ -294,7 +377,7 @@ async def nation_identify(nation_id: int, api_key: str) -> dict:
     query: dict = {
         "field": "nations",
         "args": {"id": nation_id},
-        "data": (
+        "return": (
             "id",
             "nation_name",
             "leader_name",
@@ -315,7 +398,7 @@ async def nation_military(nation_id: int, api_key: str) -> dict:
     query: dict = {
         "field": "nations",
         "args": {"id": nation_id},
-        "data": (
+        "return": (
             "soldiers",
             "tanks",
             "aircraft",
@@ -340,7 +423,7 @@ async def nation_projects(nation_id: int, api_key: str) -> dict:
     query: dict = {
         "field": "nations",
         "args": {"id": nation_id},
-        "data": (
+        "return": (
             "projects",
             "project_bits",
             "iron_works",
@@ -393,7 +476,7 @@ async def nation_vault(nation_id: int, api_key: str) -> dict:
     query: dict = {
         "field": "nations",
         "args": {"id": nation_id},
-        "data": (
+        "return": (
             "money",
             "coal",
             "oil",
@@ -424,7 +507,7 @@ async def nation_war_stats(nation_id: int, api_key: str) -> dict:
     query: dict = {
         "field": "nations",
         "args": {"id": nation_id},
-        "data": (
+        "return": (
             "wars_won",
             "wars_lost",
             "soldier_casualties",
@@ -460,7 +543,7 @@ async def nation_wars(nation_id: int, api_key: str) -> list:
     query: dict = {
         "field": "nations",
         "args": {"id": nation_id},
-        "data": (
+        "return": (
             "id",
             "date",
             "reason",
@@ -527,7 +610,7 @@ async def alliances_pages(api_key: str, length: int = 50) -> int:
     query: dict = {
         "field": "alliances",
         "args": {"first": length},
-        "data": {"paginatorInfo": "lastPage"}
+        "return": {"paginatorInfo": "lastPage"}
     }
     response: dict = await api.get_query(query, api_key)
     return response["alliances"]["paginatorInfo"]["lastPage"]
@@ -548,7 +631,7 @@ async def alliance_identifiers(api_key: str, length: int = 50) -> list:
         query: dict = {
             "field": f"page_{page}: alliances",
             "args": {"first": length, "page": page},
-            "data": {"data": ("id", "name", "acronym")}
+            "return": {"data": ("id", "name", "acronym")}
         }
         bulk_query.insert(query)
 
@@ -568,7 +651,7 @@ async def alliance_all(alliance_id: int, api_key: str) -> dict:
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
-        "data": {
+        "return": {
             "data": (
                 "id",
                 "name",
@@ -600,7 +683,7 @@ async def alliance_identify(alliance_id: int, api_key: str) -> dict:
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
-        "data": {
+        "return": {
             "data": (
                 "id",
                 "name",
@@ -623,20 +706,18 @@ async def alliance_treaties(alliance_id: int, api_key: str) -> dict:
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
-        "data": {
-            "data": (
-                {
-                    "treaties": (
-                        "id",
-                        "date",
-                        "treat_type",
-                        "treaty_url",
-                        "turns_left"
-                        "alliance1_id",
-                        "alliance2_id"
-                    )
-                }
-            )
+        "return": {
+            "data": {
+                "treaties": (
+                    "id",
+                    "date",
+                    "treat_type",
+                    "treaty_url",
+                    "turns_left"
+                    "alliance1_id",
+                    "alliance2_id"
+                )
+            }
         }
     }
     response: dict = await api.get_query(query, api_key)
@@ -654,62 +735,60 @@ async def alliance_wars(alliance_id: int, api_key: str) -> dict:
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
-        "data": {
-            "data": (
-                {
-                    "wars": (
-                        "id",
-                        "date",
-                        "reason",
-                        "war_type",
-                        "ground_control",
-                        "air_superiority",
-                        "naval_blockade",
-                        "winner_id",
-                        "turns_left",
-                        "att_id",
-                        "att_alliance_id",
-                        "att_alliance_position",
-                        "def_id",
-                        "def_alliance_id",
-                        "def_alliance_position",
-                        "att_points",
-                        "def_points",
-                        "att_peace",
-                        "def_peace",
-                        "att_resistance",
-                        "def_resistance",
-                        "att_fortify",
-                        "def_fortify",
-                        "att_gas_used",
-                        "def_gas_used",
-                        "att_mun_used",
-                        "def_mun_used",
-                        "att_alum_used",
-                        "def_alum_used",
-                        "att_steel_used",
-                        "def_steel_used",
-                        "att_infra_destroyed",
-                        "def_infra_destroyed",
-                        "att_money_looted",
-                        "def_money_looted",
-                        "att_soldiers_killed",
-                        "def_soldiers_killed",
-                        "att_tanks_killed",
-                        "def_tanks_killed",
-                        "att_aircraft_killed",
-                        "def_aircraft_killed",
-                        "att_ships_killed",
-                        "def_ships_killed",
-                        "att_missiles_used",
-                        "def_missiles_used",
-                        "att_nukes_used",
-                        "def_nukes_used",
-                        "att_infra_destroyed_value",
-                        "def_infra_destroyed_value"
-                    )
-                }
-            )
+        "return": {
+            "data": {
+                "wars": (
+                    "id",
+                    "date",
+                    "reason",
+                    "war_type",
+                    "ground_control",
+                    "air_superiority",
+                    "naval_blockade",
+                    "winner_id",
+                    "turns_left",
+                    "att_id",
+                    "att_alliance_id",
+                    "att_alliance_position",
+                    "def_id",
+                    "def_alliance_id",
+                    "def_alliance_position",
+                    "att_points",
+                    "def_points",
+                    "att_peace",
+                    "def_peace",
+                    "att_resistance",
+                    "def_resistance",
+                    "att_fortify",
+                    "def_fortify",
+                    "att_gas_used",
+                    "def_gas_used",
+                    "att_mun_used",
+                    "def_mun_used",
+                    "att_alum_used",
+                    "def_alum_used",
+                    "att_steel_used",
+                    "def_steel_used",
+                    "att_infra_destroyed",
+                    "def_infra_destroyed",
+                    "att_money_looted",
+                    "def_money_looted",
+                    "att_soldiers_killed",
+                    "def_soldiers_killed",
+                    "att_tanks_killed",
+                    "def_tanks_killed",
+                    "att_aircraft_killed",
+                    "def_aircraft_killed",
+                    "att_ships_killed",
+                    "def_ships_killed",
+                    "att_missiles_used",
+                    "def_missiles_used",
+                    "att_nukes_used",
+                    "def_nukes_used",
+                    "att_infra_destroyed_value",
+                    "def_infra_destroyed_value"
+                )
+            }
         }
     }
     response: dict = await api.get_query(query, api_key)
@@ -727,16 +806,14 @@ async def alliance_members_identifiers(alliance_id: int, api_key: str) -> dict:
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
-        "data": {
-            "data": (
-                {
-                    "nations": (
-                        "id",
-                        "nation_name",
-                        "leader_name"
-                    )
-                }
-            )
+        "return": {
+            "data": {
+                "nations": (
+                    "id",
+                    "nation_name",
+                    "leader_name"
+                )
+            }
         }
     }
     response: dict = await api.get_query(query, api_key)
@@ -754,27 +831,25 @@ async def alliance_members_vault(alliance_id: int, api_key: str) -> dict:
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
-        "data": {
-            "data": (
-                {
-                    "nations": (
-                        "id",
-                        "money",
-                        "coal",
-                        "oil",
-                        "uranium",
-                        "iron",
-                        "bauxite",
-                        "lead",
-                        "gasoline",
-                        "munitions",
-                        "steel",
-                        "aluminum",
-                        "food",
-                        "credits"
-                    )
-                }
-            )
+        "return": {
+            "data": {
+                "nations": (
+                    "id",
+                    "money",
+                    "coal",
+                    "oil",
+                    "uranium",
+                    "iron",
+                    "bauxite",
+                    "lead",
+                    "gasoline",
+                    "munitions",
+                    "steel",
+                    "aluminum",
+                    "food",
+                    "credits"
+                )
+            }
         }
     }
     response: dict = await api.get_query(query, api_key)
@@ -792,21 +867,19 @@ async def alliance_members_military(alliance_id: int, api_key: str) -> dict:
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
-        "data": {
-            "data": (
-                {
-                    "nations": (
-                        "id",
-                        "soldiers",
-                        "tanks",
-                        "aircraft",
-                        "ships",
-                        "spies",
-                        "missiles",
-                        "nukes"
-                    )
-                }
-            )
+        "return": {
+            "data": {
+                "nations": (
+                    "id",
+                    "soldiers",
+                    "tanks",
+                    "aircraft",
+                    "ships",
+                    "spies",
+                    "missiles",
+                    "nukes"
+                )
+            }
         }
     }
     response: dict = await api.get_query(query, api_key)
@@ -824,37 +897,35 @@ async def alliance_tax_brackets(alliance_id: int, api_key: str) -> dict:
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
-        "data": {
-            "data": (
-                {
-                    "taxrecs": (
-                        "id",
-                        "date",
-                        "sender_id",
-                        "sender_type",
-                        "sender",
-                        "receiver_id",
-                        "receiver",
-                        "receiver_type",
-                        "banker_id",
-                        "banker",
-                        "note",
-                        "money",
-                        "coal",
-                        "oil",
-                        "uranium",
-                        "iron",
-                        "bauxite",
-                        "lead",
-                        "gasoline",
-                        "munitions",
-                        "steel",
-                        "aluminum",
-                        "food",
-                        "tax_id"
-                    )
-                }
-            )
+        "return": {
+            "data": {
+                "taxrecs": (
+                    "id",
+                    "date",
+                    "sender_id",
+                    "sender_type",
+                    "sender",
+                    "receiver_id",
+                    "receiver",
+                    "receiver_type",
+                    "banker_id",
+                    "banker",
+                    "note",
+                    "money",
+                    "coal",
+                    "oil",
+                    "uranium",
+                    "iron",
+                    "bauxite",
+                    "lead",
+                    "gasoline",
+                    "munitions",
+                    "steel",
+                    "aluminum",
+                    "food",
+                    "tax_id"
+                )
+            }
         }
     }
     response: dict = await api.get_query(query, api_key)
@@ -872,23 +943,21 @@ async def alliance_tax_records(alliance_id: int, api_key: str) -> dict:
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
-        "data": {
-            "data": (
-                {
-                    "tax_brackets": (
-                        "id",
-                        "alliance_id",
-                        "alliance",
-                        "date",
-                        "date_modified",
-                        "last_modifier_id",
-                        "last_modifier",
-                        "tax_rate",
-                        "resource_tax_rate",
-                        "bracket_name"
-                    )
-                }
-            )
+        "return": {
+            "data": {
+                "tax_brackets": (
+                    "id",
+                    "alliance_id",
+                    "alliance",
+                    "date",
+                    "date_modified",
+                    "last_modifier_id",
+                    "last_modifier",
+                    "tax_rate",
+                    "resource_tax_rate",
+                    "bracket_name"
+                )
+            }
         }
     }
     response: dict = await api.get_query(query, api_key)
@@ -906,7 +975,7 @@ async def alliance_bank_contents(alliance_id: int, api_key: str) -> dict:
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
-        "data": {
+        "return": {
             "data": (
                 "money",
                 "coal",
@@ -938,37 +1007,35 @@ async def alliance_bank_records(alliance_id: int, api_key: str) -> dict:
     query: dict = {
         "field": "alliances",
         "args": {"id": alliance_id},
-        "data": {
-            "data": (
-                {
-                    "bankrecs": (
-                        "id",
-                        "date",
-                        "sender_id",
-                        "sender_type",
-                        "sender",
-                        "receiver_id",
-                        "receiver",
-                        "receiver_type",
-                        "banker_id",
-                        "banker",
-                        "note",
-                        "money",
-                        "coal",
-                        "oil",
-                        "uranium",
-                        "iron",
-                        "bauxite",
-                        "lead",
-                        "gasoline",
-                        "munitions",
-                        "steel",
-                        "aluminum",
-                        "food",
-                        "tax_id"
-                    )
-                }
-            )
+        "return": {
+            "data": {
+                "bankrecs": (
+                    "id",
+                    "date",
+                    "sender_id",
+                    "sender_type",
+                    "sender",
+                    "receiver_id",
+                    "receiver",
+                    "receiver_type",
+                    "banker_id",
+                    "banker",
+                    "note",
+                    "money",
+                    "coal",
+                    "oil",
+                    "uranium",
+                    "iron",
+                    "bauxite",
+                    "lead",
+                    "gasoline",
+                    "munitions",
+                    "steel",
+                    "aluminum",
+                    "food",
+                    "tax_id"
+                )
+            }
         }
     }
     response: dict = await api.get_query(query, api_key)
