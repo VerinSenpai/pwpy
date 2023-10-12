@@ -107,13 +107,13 @@ def _convert_dict_to_query(query_data: typing.Union[str, dict]) -> str:
     if isinstance(query_data, str):
         return query_data
 
-    converted_query: str = f"{query_data['field']}"
+    converted_query: str = f"{query_data['model']}"
 
     if query_args := query_data.get("args"):
         converted_args: str = ' '.join(_convert_args_to_string(query_args))
         converted_query += f"({converted_args})"
 
-    if query_fields := query_data.get("return"):
+    if query_fields := query_data.get("fields"):
         converted_fields: str = ' '.join(_convert_fields_to_string(query_fields))
         converted_query += f"{{{converted_fields}}}"
 
@@ -169,8 +169,8 @@ async def get_query(query: typing.Union[str, dict], api_key: str) -> dict:
             _raise_status_exception(response.status, response.headers)
             response_data: dict = await response.json()
 
-    if errors := response_data.get("errors"):
-        _raise_message_exception(errors)
+    if _errors := response_data.get("errors"):
+        _raise_message_exception(_errors)
 
     elif data := response_data.get("data"):
         return data
@@ -181,7 +181,7 @@ async def get_query(query: typing.Union[str, dict], api_key: str) -> dict:
 
 class BulkQuery:
     """
-    Build and request chunks of multiple queries.
+    Build, chunk, and post mass queries.
     """
     def __init__(self, api_key: str, *, chunk_size: int = 10):
         """
@@ -189,7 +189,7 @@ class BulkQuery:
         :param chunk_size: The number of queries to send in each payload.
         """
         self._api_key: str = api_key
-        self._queries: list = []
+        self._queries: set = set()
         self._chunk_size: int = chunk_size
 
     @property
@@ -199,14 +199,14 @@ class BulkQuery:
 
         :return: Groups of joined GQL query strings.
         """
-        payloads: list = self._queries
+        payloads: list = list(self._queries)
         chunk_size: int = self._chunk_size
 
         for count in range(0, len(payloads), chunk_size):
-            chunk: list[str] = []
+            chunk: set[str] = set()
 
             for payload in payloads[count:count + chunk_size]:
-                chunk.append(_convert_dict_to_query(payload))
+                chunk.add(payload)
 
             yield "\n".join(chunk)
 
@@ -216,7 +216,7 @@ class BulkQuery:
 
         :param query: A properly formatted GQL string or a dict that can be converted into a GQL string.
         """
-        self._queries.append(query)
+        self._queries.add(_convert_dict_to_query(query))
 
     async def get(self) -> dict:
         """
@@ -224,12 +224,12 @@ class BulkQuery:
 
         :return: A dict containing all returned API response data.
         """
-        results: dict = {}
-        tasks: set = set()
+        results: dict = dict()
+        tasks: list = list()
 
         async with asyncio.TaskGroup() as tg:
             for chunk in self._chunk_requests:
-                tasks.add(tg.create_task(get_query(chunk, self._api_key)))
+                tasks.append(tg.create_task(get_query(chunk, self._api_key)))
 
         for task in tasks:
             results.update(task.result())
