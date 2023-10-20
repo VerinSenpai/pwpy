@@ -21,17 +21,26 @@
 # SOFTWARE.
 
 
+from typing import Callable, Coroutine, Set, Dict
 from pwpy import exceptions
+from collections import deque
 
 import typing
 import aiohttp
 import asyncio
 import time
+import logging
+import contextlib
+import json
+
+
+_LOGGER = logging.getLogger("pwpy.events")
 
 
 __all__: typing.List[str] = [
     "get_query",
-    "BulkQuery"
+    "BulkQuery",
+    "SocketWatcher"
 ]
 
 
@@ -235,3 +244,332 @@ class BulkQuery:
             results.update(task.result())
 
         return results
+
+
+class Listener:
+
+    def __init__(
+        self,
+        coro: Callable,
+        model: str,
+        event: str,
+    ):
+        self.coro: Coroutine = coro
+        self.model: str = model
+        self.event: str = event
+        self.channel: str = None
+        self.active: asyncio.Event = asyncio.Event()
+
+
+class SocketWatcher:
+    """
+    Client for subscribing to and listening for pusher events from the api.
+    Based on pnwkit-py https://github.com/mrvillage/pnwkit-py/blob/master/pnwkit/new.py#L1434C7-L1434C13
+    """
+    def __init__(
+        self, api_key: str, *,
+        loop: asyncio.BaseEventLoop = None,
+        socket_url: str = "wss://socket.politicsandwar.com/app/a22734a47847a64386c8?protocol=7",
+        auth_url: str = "https://api.politicsandwar.com/subscriptions/v1/auth",
+        subscribe_url: str = "https://api.politicsandwar.com/subscriptions/v1/subscribe/{model}/{event}",
+    ):
+
+        self._api_key: str = api_key
+        self._socket_url: str = socket_url
+        self._auth_url: str = auth_url
+        self._subscribe_url: str = subscribe_url
+
+        if loop is None:
+            loop = asyncio.get_event_loop()
+
+        self._tasks: Set[asyncio.Task] = set()
+        self._loop = loop
+        self._running: bool = False
+        self._closing: asyncio.Event = asyncio.Event()
+        self._session: aiohttp.ClientSession = None
+        self._socket: aiohttp.ClientWebSocketResponse = None
+        self._socket_id: str = None
+        self._connected: asyncio.Event = asyncio.Event()
+        self._listening: asyncio.Event = asyncio.Event()
+        self._reconnecting: bool = False
+        self._timeout: int = 120
+        self._last_msg: float = 0
+        self._last_ping: float = 0
+        self._last_pong: float = 0
+        self._listeners: Dict[Listener] = dict()
+
+        self._socket_task: asyncio.Task = None
+        self._heart_task: asyncio.Task = None
+
+    def _create_task(self, coro: Coroutine):
+        def done_callback(_):
+            self._tasks.remove(task)
+
+        task = self._loop.create_task(coro, name=coro.__name__)
+        task.add_done_callback(done_callback)
+        self._tasks.add(task)
+
+    async def run(self):
+        if self._running:
+            raise exceptions.WatcherStateError("watcher is already running!")
+
+        elif self._closing.is_set():
+            await self._closing.wait()
+
+        await self._connect()
+
+        self._socket_task = self._loop.create_task(self._listen_for_messages())
+        self._heart_task = self._loop.create_task(self._ensure_heartbeat())
+
+        self._running = True
+
+    async def stop(self):
+        if not self._running:
+            raise exceptions.WatcherStateError("watcher is not currently running!")
+
+        elif self._closing.is_set():
+            raise exceptions.WatcherStateError("watcher is already closing!")
+
+        self._running = False
+        self._closing.set()
+
+        self._socket_task.cancel()
+        self._heart_task.cancel()
+
+        await self._maybe_close_socket()
+
+        if self._tasks:
+            done, pending = await asyncio.wait(self._tasks, timeout=120)
+
+            for task in pending:
+                task.cancel()
+
+        if self._session and not self._session.closed:
+            await self._session.close()
+
+        self._closing.clear()
+
+    async def _connect(self):
+        if self._session is None or self._session.closed:
+            self._session = aiohttp.ClientSession()
+
+            if self._socket:
+                await self._maybe_close_socket()
+
+        self._socket = await self._session.ws_connect(
+            self._socket_url,
+            timeout=30,
+            autoclose=False,
+            max_msg_size=0
+        )
+        self._connected.set()
+
+    async def _reconnect(self, message: bytes = b""):
+        if self._reconnecting:
+            return
+
+        self._reconnecting = True
+
+        await self._maybe_close_socket(1002, message)
+
+        self._last_msg = time.perf_counter()
+        self._last_ping = time.perf_counter()
+        self._last_pong = time.perf_counter() + 1
+
+        await self._connect()
+
+        for channel, listener in self._listeners.items():
+            self._create_task(self._subscribe(listener))
+
+        self._reconnecting = False
+
+    async def _maybe_close_socket(self, code: int = 1000, message: bytes = b""):
+        self._connected.clear()
+        self._listening.clear()
+
+        if self._socket.closed:
+            return
+
+        with contextlib.suppress(ConnectionResetError):
+            await self._socket.close(code=code, message=message)
+
+    async def _handle_closed_socket(self):
+        self._connected.clear()
+        self._listening.clear()
+
+        close_code = self._socket.close_code
+
+        if close_code in range(4000, 4100):
+            await asyncio.sleep(600)
+
+        elif close_code in range(4100, 4200):
+            await asyncio.sleep(1)
+
+        await self._reconnect()
+
+    async def _handle_message(self, message):
+        if message.type in (aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.CLOSING):
+            await self._handle_closed_socket()
+
+        elif message.type != aiohttp.WSMsgType.TEXT:
+            _LOGGER.warning("message of unknown type was received! (%s)", message.type)
+
+            return
+
+        data = json.loads(message.data)
+        event = data["event"]
+
+        self._last_msg = time.perf_counter()
+
+        if event == "pusher:connection_established":
+            event_data = json.loads(data["data"])
+            self._socket_id = event_data["socket_id"]
+            self._timeout = min(self._timeout, event_data["activity_timeout"])
+            self._listening.set()
+
+        elif event == "pusher_internal:subscription_succeeded":
+            if listener := self._listeners.get(data["channel"]):
+                listener.active.set()
+
+            else:
+                await self._unsubscribe(data["channel"])
+
+        elif event == "pusher:pong":
+            self._last_pong = time.perf_counter()
+
+        elif event == "pusher:ping":
+            await self._send_message("pusher:pong")
+
+        else:
+            if listener := self._listeners.get(data["channel"]):
+                event_data = json.loads(data["data"])
+                await listener.coro(listener, event_data)
+
+            else:
+                await self._unsubscribe(data["channel"])
+
+    async def _send_message(self, event: str, data: dict = None):
+        payload = {"event": event, "data": data or {}}
+        await self._socket.send_json(payload)
+
+    async def _listen_for_messages(self):
+        while True:
+            await self._connected.wait()
+
+            async for message in self._socket:
+                self._create_task(self._handle_message(message))
+
+            if self._socket.closed:
+                await self._handle_closed_socket()
+
+    async def _ensure_heartbeat(self):
+        while True:
+            try:
+                sleep_time = self._last_msg + self._timeout - time.perf_counter()
+
+                if sleep_time < 0:
+                    await asyncio.sleep(1)
+
+                    continue
+
+                await asyncio.sleep(sleep_time)
+
+                if self._last_msg + self._timeout > time.perf_counter():
+                    continue
+
+                if self._last_ping > self._last_pong:
+                    if self._last_ping + self._timeout < time.perf_counter():
+                        await self._reconnect()
+
+                        await asyncio.sleep(self._timeout)
+
+                    continue
+
+                if self._last_ping + self._timeout > time.perf_counter():
+                    continue
+
+                await self._send_message("pusher:ping")
+
+                self._last_ping = time.perf_counter()
+
+            except ConnectionResetError:
+                await self._reconnect(b"Connection reset")
+
+                await asyncio.sleep(self._timeout)
+
+    async def _request_channel(self, listener: "Listener"):
+        url = self._subscribe_url.format(model=listener.model, event=listener.event)
+
+        async with self._session.get(url, params={"api_key": self._api_key}) as response:
+            try:
+                data = await response.json()
+
+                if error_msg := data.get("error"):
+                    raise exceptions.SubscribeFailed(error_msg)
+
+                listener.channel = data["channel"]
+
+            except aiohttp.ContentTypeError as exc:
+                raise exceptions.SubscribeFailed(exc.message) from exc
+
+    async def _authorize_subscribe(self, listener: "Listener"):
+        payload = {"socket_id": self._socket_id, "channel_name": listener.channel}
+
+        async with self._session.post(self._auth_url, data=payload) as response:
+            if response.status != 200:
+                raise exceptions.AuthorizeFailed()
+
+            data = await response.json()
+
+            return data["auth"]
+
+    async def _subscribe(self, listener: "Listener"):
+        if not listener.channel:
+            await self._request_channel(listener)
+
+        try:
+            auth = await self._authorize_subscribe(listener)
+
+        except exceptions.AuthorizeFailed:
+            await self._request_channel(listener)
+            auth = await self._authorize_subscribe(listener)
+
+        data = {"auth": auth, "channel": listener.channel}
+        await self._send_message("pusher:subscribe", data)
+
+        try:
+            self._listeners[listener.channel] = listener
+            await asyncio.wait_for(listener.active.wait(), timeout=60)
+
+        except asyncio.TimeoutError:
+            self._listeners.pop(listener.channel, None)
+
+            raise exceptions.SubscribeFailed()
+
+    async def subscribe(self, listener: Listener):
+        if self._closing.is_set():
+            raise exceptions.WatcherStateError()
+
+        elif self._running and self._socket.closed:
+            await self._reconnect()
+
+        if not self._listening.is_set():
+            await self._listening.wait()
+
+        await self._subscribe(listener)
+
+    async def _unsubscribe(self, channel: str):
+        self._listeners.pop(channel, None)
+        await self._send_message("pusher:unsubscribe", {"channel": channel})
+
+    async def unsubscribe(self, listener: "Listener"):
+        await self._unsubscribe(listener.channel)
+
+    def listen(self, model: str, event: str):
+        def decorator(coro: Coroutine):
+            listener = Listener(coro, model, event)
+            self._create_task(self.subscribe(listener))
+
+            return coro
+
+        return decorator

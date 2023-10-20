@@ -122,3 +122,21 @@ class LoginInvalid(PWPYException):
     """
     Exception raised when the login credentials provided for a scrape were invalid.
     """
+
+
+class WatcherStateError(PWPYException):
+    """
+    Exception raised when an action is carried out during an incorrect state.
+    """
+
+
+class SubscribeFailed(PWPYException):
+    """
+    Exception raised when a subscribe attempt fails.
+    """
+
+
+class AuthorizeFailed(PWPYException):
+    """
+    Exception raised when an attempted authorize request fails.
+    """
