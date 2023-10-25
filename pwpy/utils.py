@@ -22,7 +22,7 @@
 
 
 
-from pwpy import exceptions
+from pwpy import errors
 
 import typing
 import math
