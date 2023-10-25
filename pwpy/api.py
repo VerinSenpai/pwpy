@@ -21,9 +21,7 @@
 # SOFTWARE.
 
 
-from typing import Callable, Coroutine, Set, Dict
-from pwpy import exceptions
-from collections import deque
+from pwpy import errors
 
 import typing
 import aiohttp
@@ -40,6 +38,7 @@ _LOGGER = logging.getLogger("pwpy.events")
 __all__: typing.List[str] = [
     "get_query",
     "BulkQuery",
+    "Wrapper",
     "SocketWatcher"
 ]
 
@@ -58,7 +57,7 @@ def _ratelimit(func):
         try:
             result: dict = await func(*args, **kwargs)
 
-        except exceptions.RateLimitHit as exc:
+        except errors.RateLimitHit as exc:
             remaining = int(exc.headers["X-RateLimit-Remaining"])
             reset = int(exc.headers["X-RateLimit-Reset"])
             result: dict = await wrapper(*args, **kwargs)
@@ -129,37 +128,37 @@ def _convert_dict_to_query(query_data: typing.Union[str, dict]) -> str:
     return converted_query
 
 
-def _raise_message_exception(errors: list) -> None:
-    message: str = errors[0]["message"]
+def _raise_message_exception(_errors: list) -> None:
+    message: str = _errors[0]["message"]
 
     if "cannot query field" in message:
-        raise exceptions.QueryFieldError(message)
+        raise errors.QueryFieldError(message)
 
     elif "must have a sub selection" in message:
-        raise exceptions.QueryMissingSubSelection(message)
+        raise errors.QueryMissingSubSelection(message)
 
     elif "syntax error" in message:
-        raise exceptions.QuerySyntaxError(message)
+        raise errors.QuerySyntaxError(message)
 
     elif "unknown argument" in message:
-        raise exceptions.QueryArgumentInvalid(message)
+        raise errors.QueryArgumentInvalid(message)
 
     else:
-        raise exceptions.UnexpectedResponse(message)
+        raise errors.UnexpectedResponse(message)
 
 
 def _raise_status_exception(status, headers) -> None:
     if status in (520, 521, 522):
-        raise exceptions.CloudflareError(status)
+        raise errors.CloudflareError(status)
 
     elif status == 401:
-        raise exceptions.QueryKeyError("you specified an invalid api_key.")
+        raise errors.QueryKeyError("you specified an invalid api_key.")
 
     elif status == 503:
-        raise exceptions.ServiceUnavailable()
+        raise errors.ServiceUnavailable()
 
     elif status == 429:
-        raise exceptions.RateLimitHit(headers)
+        raise errors.RateLimitHit(headers)
 
 
 @_ratelimit
@@ -185,7 +184,7 @@ async def get_query(query: typing.Union[str, dict], api_key: str) -> dict:
         return data
 
     else:
-        raise exceptions.ResponseFormatError(str(response_data))
+        raise errors.ResponseFormatError(str(response_data))
 
 
 class BulkQuery:
@@ -199,6 +198,10 @@ class BulkQuery:
         """
         self._api_key: str = api_key
         self._queries: set = set()
+
+        if chunk_size < 1:
+            raise ValueError("chunk size must be one or higher!")
+
         self._chunk_size: int = chunk_size
 
     @property
@@ -248,13 +251,8 @@ class BulkQuery:
 
 class Listener:
 
-    def __init__(
-        self,
-        coro: Callable,
-        model: str,
-        event: str,
-    ):
-        self.coro: Coroutine = coro
+    def __init__(self, coro: typing.Coroutine, model: str, event: str) -> None:
+        self.coro: typing.Coroutine = coro
         self.model: str = model
         self.event: str = event
         self.channel: str = None
@@ -262,27 +260,21 @@ class Listener:
 
 
 class SocketWatcher:
-    """
-    Client for subscribing to and listening for pusher events from the api.
-    Based on pnwkit-py https://github.com/mrvillage/pnwkit-py/blob/master/pnwkit/new.py#L1434C7-L1434C13
-    """
     def __init__(
-        self, api_key: str, *,
-        loop: asyncio.BaseEventLoop = None,
-        socket_url: str = "wss://socket.politicsandwar.com/app/a22734a47847a64386c8?protocol=7",
-        auth_url: str = "https://api.politicsandwar.com/subscriptions/v1/auth",
-        subscribe_url: str = "https://api.politicsandwar.com/subscriptions/v1/subscribe/{model}/{event}",
+            self, api_key: str, *,
+            loop: typing.Optional[asyncio.BaseEventLoop] = None,
+            socket_url: str = "wss://socket.politicsandwar.com/app/a22734a47847a64386c8?protocol=7",
+            auth_url: str = "https://api.politicsandwar.com/subscriptions/v1/auth",
+            subscribe_url: str = "https://api.politicsandwar.com/subscriptions/v1/subscribe/{model}/{event}",
     ):
+        if loop is None:
+            loop = asyncio.get_event_loop()
 
         self._api_key: str = api_key
         self._socket_url: str = socket_url
         self._auth_url: str = auth_url
         self._subscribe_url: str = subscribe_url
-
-        if loop is None:
-            loop = asyncio.get_event_loop()
-
-        self._tasks: Set[asyncio.Task] = set()
+        self._tasks: typing.Set[asyncio.Task] = set()
         self._loop = loop
         self._running: bool = False
         self._closing: asyncio.Event = asyncio.Event()
@@ -296,12 +288,11 @@ class SocketWatcher:
         self._last_msg: float = 0
         self._last_ping: float = 0
         self._last_pong: float = 0
-        self._listeners: Dict[Listener] = dict()
+        self._listeners: typing.Dict[Listener] = dict()
+        self._listener: asyncio.Task = None
+        self._heartbeat: asyncio.Task = None
 
-        self._socket_task: asyncio.Task = None
-        self._heart_task: asyncio.Task = None
-
-    def _create_task(self, coro: Coroutine):
+    def _create_task(self, coro: typing.Coroutine):
         def done_callback(_):
             self._tasks.remove(task)
 
@@ -311,30 +302,30 @@ class SocketWatcher:
 
     async def run(self):
         if self._running:
-            raise exceptions.WatcherStateError("watcher is already running!")
+            raise errors.WatcherStateError("watcher is already running!")
 
         elif self._closing.is_set():
             await self._closing.wait()
 
         await self._connect()
 
-        self._socket_task = self._loop.create_task(self._listen_for_messages())
-        self._heart_task = self._loop.create_task(self._ensure_heartbeat())
+        self._listener = self._loop.create_task(self._listen_for_messages())
+        self._heartbeat = self._loop.create_task(self._ensure_heartbeat())
 
         self._running = True
 
     async def stop(self):
         if not self._running:
-            raise exceptions.WatcherStateError("watcher is not currently running!")
+            raise errors.WatcherStateError("watcher is not currently running!")
 
         elif self._closing.is_set():
-            raise exceptions.WatcherStateError("watcher is already closing!")
+            raise errors.WatcherStateError("watcher is already closing!")
 
         self._running = False
         self._closing.set()
 
-        self._socket_task.cancel()
-        self._heart_task.cancel()
+        self._listener.cancel()
+        self._heartbeat.cancel()
 
         await self._maybe_close_socket()
 
@@ -505,19 +496,19 @@ class SocketWatcher:
                 data = await response.json()
 
                 if error_msg := data.get("error"):
-                    raise exceptions.SubscribeFailed(error_msg)
+                    raise errors.SubscribeFailed(error_msg)
 
                 listener.channel = data["channel"]
 
             except aiohttp.ContentTypeError as exc:
-                raise exceptions.SubscribeFailed(exc.message) from exc
+                raise errors.SubscribeFailed(exc.message) from exc
 
     async def _authorize_subscribe(self, listener: "Listener"):
         payload = {"socket_id": self._socket_id, "channel_name": listener.channel}
 
         async with self._session.post(self._auth_url, data=payload) as response:
             if response.status != 200:
-                raise exceptions.AuthorizeFailed()
+                raise errors.AuthorizeFailed()
 
             data = await response.json()
 
@@ -530,7 +521,7 @@ class SocketWatcher:
         try:
             auth = await self._authorize_subscribe(listener)
 
-        except exceptions.AuthorizeFailed:
+        except errors.AuthorizeFailed:
             await self._request_channel(listener)
             auth = await self._authorize_subscribe(listener)
 
@@ -544,11 +535,11 @@ class SocketWatcher:
         except asyncio.TimeoutError:
             self._listeners.pop(listener.channel, None)
 
-            raise exceptions.SubscribeFailed()
+            raise errors.SubscribeFailed()
 
     async def subscribe(self, listener: Listener):
         if self._closing.is_set():
-            raise exceptions.WatcherStateError()
+            raise errors.WatcherStateError()
 
         elif self._running and self._socket.closed:
             await self._reconnect()
@@ -566,10 +557,23 @@ class SocketWatcher:
         await self._unsubscribe(listener.channel)
 
     def listen(self, model: str, event: str):
-        def decorator(coro: Coroutine):
+        def decorator(coro: typing.Coroutine):
             listener = Listener(coro, model, event)
             self._create_task(self.subscribe(listener))
 
             return coro
 
         return decorator
+
+
+class Wrapper:
+
+    def __init__(self, api_key: str) -> None:
+        self._api_key: str = api_key
+        self._watcher: typing.Optional[SocketWatcher] = None
+
+    async def get_query(self, query: typing.Union[str, dict]) -> dict:
+        await get_query(query, self._api_key)
+
+    def bulk_query(self, *, chunk_size: int = 10) -> BulkQuery:
+        return BulkQuery(self._api_key, chunk_size=chunk_size)
