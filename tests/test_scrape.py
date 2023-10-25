@@ -16,7 +16,7 @@
 
 
 from aioresponses import aioresponses
-from pwpy import scrape, exceptions
+from pwpy import scrape, errors
 
 import aiohttp
 import pytest
