@@ -30,24 +30,38 @@ async def test_login():
         with aioresponses() as mock:
             mock.post(login_url, status=200, body="Login Successful")
 
-            await scrape.login("", "", session)
+            await scrape.login(session, "", "")
 
             mock.post(login_url, status=200, body="Login Failed")
 
             try:
-                await scrape.login("", "", session)
+                await scrape.login(session, "", "")
 
             except Exception as exc:
-                assert isinstance(exc, exceptions.LoginInvalid)
+                assert isinstance(exc, errors.LoginInvalid)
 
 
 @pytest.mark.asyncio
 async def test_send_message():
-    login_url = "https://politicsandwar.com/login/"
     message_url = "https://politicsandwar.com/inbox/message/"
+    async with aiohttp.ClientSession() as session:
+        with aioresponses() as mock:
+            mock.post(message_url, status=200)
 
-    with aioresponses() as mock:
-        mock.post(login_url, status=200, body="Login Successful")
-        mock.post(message_url, status=200)
+            await scrape.send_message(session, "", "", "")
 
-        await scrape.send_message("", "", "", "", "")
+            mock.post(message_url, status=200, body="name does not exist")
+
+            try:
+                await scrape.send_message(session, "", "", "")
+
+            except Exception as exc:
+                assert isinstance(exc, errors.TargetInvalid)
+
+            mock.post(message_url, status=200, body="must be logged in")
+
+            try:
+                await scrape.send_message(session, "", "", "")
+
+            except Exception as exc:
+                assert isinstance(exc, errors.LoginInvalid)
