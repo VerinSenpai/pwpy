@@ -23,7 +23,7 @@
 
 __all__ = [
     "api",
-    "exceptions",
+    "errors.py",
     "utils",
     "scrape",
     "__version__"
@@ -31,7 +31,7 @@ __all__ = [
 
 
 from pwpy import api
-from pwpy import exceptions
+from pwpy import errors
 from pwpy import utils
 from pwpy import scrape
 
