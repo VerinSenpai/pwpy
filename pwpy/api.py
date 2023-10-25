@@ -38,8 +38,8 @@ _LOGGER = logging.getLogger("pwpy.events")
 __all__: typing.List[str] = [
     "get_query",
     "BulkQuery",
-    "Wrapper",
-    "SocketWatcher"
+    "SocketWrapper",
+    "QueryWrapper",
 ]
 
 
@@ -259,7 +259,7 @@ class Listener:
         self.active: asyncio.Event = asyncio.Event()
 
 
-class SocketWatcher:
+class SocketWrapper:
     def __init__(
             self, api_key: str, *,
             loop: typing.Optional[asyncio.BaseEventLoop] = None,
@@ -488,7 +488,7 @@ class SocketWatcher:
 
                 await asyncio.sleep(self._timeout)
 
-    async def _request_channel(self, listener: "Listener"):
+    async def _request_channel(self, listener: Listener):
         url = self._subscribe_url.format(model=listener.model, event=listener.event)
 
         async with self._session.get(url, params={"api_key": self._api_key}) as response:
@@ -503,7 +503,7 @@ class SocketWatcher:
             except aiohttp.ContentTypeError as exc:
                 raise errors.SubscribeFailed(exc.message) from exc
 
-    async def _authorize_subscribe(self, listener: "Listener"):
+    async def _authorize_subscribe(self, listener: Listener):
         payload = {"socket_id": self._socket_id, "channel_name": listener.channel}
 
         async with self._session.post(self._auth_url, data=payload) as response:
@@ -514,7 +514,7 @@ class SocketWatcher:
 
             return data["auth"]
 
-    async def _subscribe(self, listener: "Listener"):
+    async def _subscribe(self, listener: Listener):
         if not listener.channel:
             await self._request_channel(listener)
 
@@ -553,7 +553,7 @@ class SocketWatcher:
         self._listeners.pop(channel, None)
         await self._send_message("pusher:unsubscribe", {"channel": channel})
 
-    async def unsubscribe(self, listener: "Listener"):
+    async def unsubscribe(self, listener: Listener):
         await self._unsubscribe(listener.channel)
 
     def listen(self, model: str, event: str):
@@ -566,11 +566,11 @@ class SocketWatcher:
         return decorator
 
 
-class Wrapper:
+class QueryWrapper:
 
     def __init__(self, api_key: str) -> None:
         self._api_key: str = api_key
-        self._watcher: typing.Optional[SocketWatcher] = None
+        self._watcher: typing.Optional[SocketWrapper] = None
 
     async def get_query(self, query: typing.Union[str, dict]) -> dict:
         await get_query(query, self._api_key)
