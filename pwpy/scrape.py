@@ -21,49 +21,45 @@
 # SOFTWARE.
 
 
-from pwpy import exceptions
+from pwpy import errors
 
-import aiohttp
 import typing
+import aiohttp
 
 
 __all__: typing.List[str] = [
     "login",
-    "send_message"
+    "send_message",
+    "MessageSession"
 ]
 
 
-async def login(email: str, password: str, session: aiohttp.ClientSession) -> None:
+async def login(session: aiohttp.ClientSession, email: str, password: str) -> None:
     """
-    Login to Politics and War.
+    Log in to Politics and War.
 
-    :param email: A valid email address for logging in with.
-    :param password: A valid password for logging in with.
-    :param session: A client session to login on.
+    :param session: An aiohttp.ClientSession instance.
+    :param email: A valid email address.
+    :param password: A valid password.
     """
     login_data: dict = {"email": email, "password": password, "loginform": "Login"}
+    response = await session.post("https://politicsandwar.com/login/", data=login_data)
+    page_content: str = await response.text()
 
-    async with session.post("https://politicsandwar.com/login/", data=login_data) as response:
-        page_content: str = await response.text()
-
-        if "Login Successful" not in page_content:
-            raise exceptions.LoginInvalid("The provided login credentials were invalid!")
+    if "Login Successful" not in page_content:
+        raise errors.LoginInvalid("The provided login credentials were invalid!")
 
 
-async def send_message(
-    email: str, password: str, target: str, subject: str, message: str
-) -> None:
+async def send_message(session: aiohttp.ClientSession, target: str, subject: str, message: str) -> None:
     """
     Sends a message in Politics and War using provided account information.
 
-    :param email: A valid email address for logging in with.
-    :param password: A valid password for logging in with.
-    :param target: A valid target leader name to message.
+    :param session: An aiohttp.ClientSession instance.
+    :param target: A valid target leader name.
     :param subject: A subject for the message.
-    :param message: The message content to be sent.
-    :return: None
+    :param message: The message content.
     """
-    message_data: dict = {
+    message_data = {
         "newconversation": "true",
         "receiver": target,
         "carboncopy": "",
@@ -72,8 +68,37 @@ async def send_message(
         "sndmsg": "Send Message",
     }
 
-    async with aiohttp.ClientSession() as session:
-        await login(email, password, session)
+    response = await session.post("https://politicsandwar.com/inbox/message/", data=message_data)
+    page_content: str = await response.text()
 
-        async with session.post("https://politicsandwar.com/inbox/message/", data=message_data):
-            pass
+    if "name does not exist" in page_content:
+        raise errors.TargetInvalid("The provided target name is invalid!")
+
+    elif "must be logged in" in page_content:
+        raise errors.LoginInvalid("You must be logged in to perform that action!")
+
+
+class MessageSession:
+
+    def __init__(self, email: str, password: str) -> None:
+        self._email: str = email
+        self._password: str = password
+        self._session: typing.Optional[aiohttp.ClientSession] = None
+
+    async def __aenter__(self) -> "MessageSession":
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        await self.close()
+
+    async def close(self) -> None:
+        if self._session and not self._session.closed:
+            await self._session.close()
+
+    async def send_message(self, targets: str, subject: str, message: str) -> None:
+        if not self._session or self._session.closed:
+            self._session = aiohttp.ClientSession()
+
+            await login(self._session, self._email, self._password)
+
+        await send_message(self._session, targets, subject, message)
