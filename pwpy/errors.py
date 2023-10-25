@@ -23,6 +23,13 @@
 
 __all__ = [
     "PWPYException",
+    "QueryError",
+    "ScrapeError",
+    "TargetInvalid",
+    "WatcherError",
+    "WatcherStateError",
+    "SubscribeFailed",
+    "AuthorizeFailed",
     "QuerySyntaxError",
     "QueryFieldError",
     "QueryArgumentInvalid",
@@ -33,7 +40,7 @@ __all__ = [
     "UnexpectedResponse",
     "ResponseFormatError",
     "CloudflareError",
-    "LoginInvalid"
+    "LoginInvalid",
 ]
 
 
@@ -43,37 +50,43 @@ class PWPYException(Exception):
     """
 
 
-class QuerySyntaxError(PWPYException):
+class QueryError(PWPYException):
+    """
+    Overarching class for all Query exceptions.
+    """
+
+
+class QuerySyntaxError(QueryError):
     """
     Exception raised when the GraphQL query is invalid.
     """
 
 
-class QueryFieldError(PWPYException):
+class QueryFieldError(QueryError):
     """
     Exception raised when attempting to query an invalid field or when a field is used incorrectly.
     """
 
 
-class QueryArgumentInvalid(PWPYException):
+class QueryArgumentInvalid(QueryError):
     """
     Exception raised when attempting to pass an invalid argument with a query.
     """
 
 
-class QueryKeyError(PWPYException):
+class QueryKeyError(QueryError):
     """
     Exception raised when the provided api key provided is invalid.
     """
 
 
-class QueryMissingSubSelection(PWPYException):
+class QueryMissingSubSelection(QueryError):
     """
     Exception raised when the provided query has a field that is missing a sub selection.
     """
 
 
-class ServiceUnavailable(PWPYException):
+class ServiceUnavailable(QueryError):
     """
     Exception raised when code 503 is returned. Note that this exception will be raised
     if you send a large number of individual requests all at once. In this instance, try
@@ -81,7 +94,7 @@ class ServiceUnavailable(PWPYException):
     """
 
 
-class RateLimitHit(PWPYException):
+class RateLimitHit(QueryError):
     """
     Exception raised when the rate limit is hit. This exception should be caught and handled
     by the rate limit script.
@@ -91,7 +104,7 @@ class RateLimitHit(PWPYException):
         self.headers = headers
 
 
-class UnexpectedResponse(PWPYException):
+class UnexpectedResponse(QueryError):
     """
     Exception raised when the error message received has no handle.
     """
@@ -100,7 +113,7 @@ class UnexpectedResponse(PWPYException):
         self.response: str = response
 
 
-class ResponseFormatError(PWPYException):
+class ResponseFormatError(QueryError):
     """
     Exception raised when the response returned does not match any expected pattern.
     """
@@ -118,25 +131,43 @@ class CloudflareError(PWPYException):
         self.status: int = status
 
 
-class LoginInvalid(PWPYException):
+class ScrapeError(PWPYException):
+    """
+    Overarching class for all Scraping exceptions.
+    """
+
+
+class LoginInvalid(ScrapeError):
     """
     Exception raised when the login credentials provided for a scrape were invalid.
     """
 
 
-class WatcherStateError(PWPYException):
+class TargetInvalid(ScrapeError):
+    """
+    Exception raised when the provided target for a message send request is invalid.
+    """
+
+
+class WatcherError(PWPYException):
+    """
+    Overarching class for all Watcher exceptions.
+    """
+
+
+class WatcherStateError(WatcherError):
     """
     Exception raised when an action is carried out during an incorrect state.
     """
 
 
-class SubscribeFailed(PWPYException):
+class SubscribeFailed(WatcherError):
     """
     Exception raised when a subscribe attempt fails.
     """
 
 
-class AuthorizeFailed(PWPYException):
+class AuthorizeFailed(WatcherError):
     """
     Exception raised when an attempted authorize request fails.
     """
