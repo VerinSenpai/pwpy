@@ -39,9 +39,9 @@ setup(
     long_description=long_description(),
     author="Verin Senpai",
     url="https://github.com/GodEmpressVerin/pwpy",
-    python_requires="==3.11",
+    python_requires="~=3.11",
     install_requires=(
-        "aiohttp",
+        "aiohttp~=3.10.5",
         "aioresponses",
         "pytest",
         "pytest-asyncio",
