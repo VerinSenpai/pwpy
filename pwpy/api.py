@@ -92,17 +92,20 @@ def _convert_fields_to_string(data: typing.Union[str, dict, typing.Sequence]) ->
     if isinstance(data, dict):
         for field_name, field_value in data.items():
             if isinstance(field_value, str):
-                yield f"{field_name}{{{field_value}}}"
+                yield f"{field_name} {{{field_value}}}"
 
             elif isinstance(field_value, typing.Sequence):
                 converted_fields: str = ' '.join(_convert_sequence_to_string(field_value))
-                yield f"{field_name}{{{converted_fields}}}"
+                yield f"{field_name} {{{converted_fields}}}"
+
+    elif isinstance(data, str):
+        yield f"data{{{data}}}"
 
     elif isinstance(data, typing.Sequence):
         yield ' '.join(_convert_sequence_to_string(data))
 
     else:
-        yield f"data{{{data}}}"
+        raise TypeError("fields must be of type str, dict, or typing.Sequence!")
 
 
 def _convert_dict_to_query(query_data: typing.Union[str, dict]) -> str:
@@ -119,7 +122,7 @@ def _convert_dict_to_query(query_data: typing.Union[str, dict]) -> str:
 
     if query_args := query_data.get("args"):
         converted_args: str = ' '.join(_convert_args_to_string(query_args))
-        converted_query += f"({converted_args})"
+        converted_query += f"({converted_args}) "
 
     if query_fields := query_data.get("fields"):
         converted_fields: str = ' '.join(_convert_fields_to_string(query_fields))
