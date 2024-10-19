@@ -23,7 +23,7 @@
 
 __all__ = [
     "api",
-    "errors.py",
+    "errors",
     "utils",
     "scrape",
     "__version__"
