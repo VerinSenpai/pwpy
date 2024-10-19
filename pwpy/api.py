@@ -574,7 +574,7 @@ class QueryWrapper:
         self._watcher: typing.Optional[SocketWrapper] = None
 
     async def get_query(self, query: typing.Union[str, dict]) -> dict:
-        await get_query(query, self._api_key)
+        return await get_query(query, self._api_key)
 
     def bulk_query(self, *, chunk_size: int = 10) -> BulkQuery:
         return BulkQuery(self._api_key, chunk_size=chunk_size)
