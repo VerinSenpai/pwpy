@@ -255,32 +255,23 @@ class Listener:
         self.coro: typing.Coroutine = coro
         self.model: str = model
         self.event: str = event
-        self.channel: str = None
+        self.channel: typing.Optional[str] = None
         self.active: asyncio.Event = asyncio.Event()
 
 
 class SocketWrapper:
-    def __init__(
-            self, api_key: str, *,
-            loop: typing.Optional[asyncio.BaseEventLoop] = None,
-            socket_url: str = "wss://socket.politicsandwar.com/app/a22734a47847a64386c8?protocol=7",
-            auth_url: str = "https://api.politicsandwar.com/subscriptions/v1/auth",
-            subscribe_url: str = "https://api.politicsandwar.com/subscriptions/v1/subscribe/{model}/{event}",
-    ):
+    def __init__(self, api_key: str, *, loop: typing.Optional[asyncio.BaseEventLoop] = None):
         if loop is None:
             loop = asyncio.get_event_loop()
 
         self._api_key: str = api_key
-        self._socket_url: str = socket_url
-        self._auth_url: str = auth_url
-        self._subscribe_url: str = subscribe_url
         self._tasks: typing.Set[asyncio.Task] = set()
         self._loop = loop
         self._running: bool = False
         self._closing: asyncio.Event = asyncio.Event()
-        self._session: aiohttp.ClientSession = None
-        self._socket: aiohttp.ClientWebSocketResponse = None
-        self._socket_id: str = None
+        self._session: typing.Optional[aiohttp.ClientSession] = None
+        self._socket: typing.Optional[aiohttp.ClientWebSocketResponse] = None
+        self._socket_id: typing.Optional[str] = None
         self._connected: asyncio.Event = asyncio.Event()
         self._listening: asyncio.Event = asyncio.Event()
         self._reconnecting: bool = False
@@ -289,8 +280,8 @@ class SocketWrapper:
         self._last_ping: float = 0
         self._last_pong: float = 0
         self._listeners: typing.Dict[Listener] = dict()
-        self._listener: asyncio.Task = None
-        self._heartbeat: asyncio.Task = None
+        self._listener: typing.Optional[asyncio.Task] = None
+        self._heartbeat: typing.Optional[asyncio.Task] = None
 
     def _create_task(self, coro: typing.Coroutine):
         def done_callback(_):
@@ -348,7 +339,7 @@ class SocketWrapper:
                 await self._maybe_close_socket()
 
         self._socket = await self._session.ws_connect(
-            self._socket_url,
+            "wss://socket.politicsandwar.com/app/a22734a47847a64386c8?protocol=7",
             timeout=30,
             autoclose=False,
             max_msg_size=0
@@ -489,9 +480,13 @@ class SocketWrapper:
                 await asyncio.sleep(self._timeout)
 
     async def _request_channel(self, listener: Listener):
-        url = self._subscribe_url.format(model=listener.model, event=listener.event)
+        url = "https://api.politicsandwar.com/subscriptions/v1/subscribe/{model}/{event}"
+        url = url.format(model=listener.model, event=listener.event)
 
-        async with self._session.get(url, params={"api_key": self._api_key}) as response:
+        async with self._session.get(
+            url,
+            params={"api_key": self._api_key}
+        ) as response:
             try:
                 data = await response.json()
 
@@ -506,7 +501,10 @@ class SocketWrapper:
     async def _authorize_subscribe(self, listener: Listener):
         payload = {"socket_id": self._socket_id, "channel_name": listener.channel}
 
-        async with self._session.post(self._auth_url, data=payload) as response:
+        async with self._session.post(
+            "https://api.politicsandwar.com/subscriptions/v1/auth",
+            data=payload
+        ) as response:
             if response.status != 200:
                 raise errors.AuthorizeFailed()
 
