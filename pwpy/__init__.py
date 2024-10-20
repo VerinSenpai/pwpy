@@ -25,6 +25,7 @@ __all__ = [
     "api",
     "errors",
     "utils",
+    "urls",
     "scrape",
     "__version__"
 ]
@@ -34,6 +35,7 @@ from pwpy import api
 from pwpy import errors
 from pwpy import utils
 from pwpy import scrape
+from pwpy import urls
 
 
 __version__ = "0.7.0"
