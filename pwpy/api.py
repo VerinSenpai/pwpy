@@ -99,7 +99,7 @@ def _convert_fields_to_string(data: typing.Union[str, dict, typing.Sequence]) ->
                 yield f"{field_name} {{{converted_fields}}}"
 
     elif isinstance(data, str):
-        yield f"data{{{data}}}"
+        yield data
 
     elif isinstance(data, typing.Sequence):
         yield ' '.join(_convert_sequence_to_string(data))
@@ -118,15 +118,17 @@ def _convert_dict_to_query(query_data: typing.Union[str, dict]) -> str:
     if isinstance(query_data, str):
         return query_data
 
-    converted_query: str = f"{query_data['model']}"
+    converted_query = query_data['model']
+
+    if query_name := query_data.get("name"):
+        converted_query = f"{query_name}: {converted_query}"
 
     if query_args := query_data.get("args"):
         converted_args: str = ' '.join(_convert_args_to_string(query_args))
         converted_query += f"({converted_args}) "
 
-    if query_fields := query_data.get("fields"):
-        converted_fields: str = ' '.join(_convert_fields_to_string(query_fields))
-        converted_query += f"{{{converted_fields}}}"
+    converted_fields: str = ' '.join(_convert_fields_to_string(query_data["query"]))
+    converted_query += f"{{{converted_fields}}}"
 
     return converted_query
 
