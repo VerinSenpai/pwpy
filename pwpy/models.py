@@ -230,6 +230,9 @@ class Nation(_Base):
     wars_lost: int = None
     wars_won: int = None
 
+    @property
+    def url(self) -> str:
+        return f"{urls.NATION_PAGE}/id={self.id}"
 
 @attr.s(auto_attribs=True)
 class Alliance(_Base):
@@ -269,3 +272,7 @@ class Alliance(_Base):
     uranium: float = None
     wars: Any = None  # <---- Type and conversion
     wiki_link: str = None
+
+    @property
+    def url(self) -> str:
+        return f"{urls.ALLIANCE_PAGE}/id={self.id}"
