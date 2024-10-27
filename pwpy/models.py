@@ -17,6 +17,8 @@
 
 from cattr import global_converter
 from typing import Any, List
+from pwpy import urls
+from enum import Enum
 
 import typing
 import attr
@@ -27,6 +29,16 @@ class _Base:
     @classmethod
     def convert(cls, data: dict) -> typing.Any:
         return global_converter.structure(data, cls)
+
+
+@attr.s(auto_attribs=True)
+class DomesticPolicy(Enum):
+    MANIFEST_DESTINY = "MANIFEST_DESTINY"
+    OPEN_MARKETS = "OPEN_MARKETS"
+    TECHNOLOGICAL_ADVANCEMENT = "TECHNOLOGICAL_ADVANCEMENT"
+    IMPERIALISM = "IMPERIALISM"
+    URBANIZATION = "URBANIZATION"
+    RAPID_EXPANSION = "RAPID_EXPANSION"
 
 
 @attr.s(auto_attribs=True)
@@ -114,7 +126,7 @@ class Nation(_Base):
     denouncements: int = None
     discord: str = None
     discord_id: int = None
-    domestic_policy: Any = None  # <---- Type and conversion
+    domestic_policy: DomesticPolicy = None
     domestic_policy_turns: int = None
     economic_policy: Any = None  # <---- Type and conversion
     emergency_gasoline_reserve: bool = None
