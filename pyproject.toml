@@ -31,6 +31,8 @@ dependencies = [
     "aioresponses",
     "pytest",
     "pytest-asyncio",
+    "attrs~=24.2.0",
+    "cattrs~=24.1.1"
 ]
 
 [tool.setuptools]

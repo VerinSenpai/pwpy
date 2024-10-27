@@ -21,9 +21,6 @@
 # SOFTWARE.
 
 
-
-from pwpy import errors
-
 import typing
 import math
 
