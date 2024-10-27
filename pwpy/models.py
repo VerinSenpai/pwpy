@@ -234,6 +234,25 @@ class Nation(_Base):
     def url(self) -> str:
         return f"{urls.NATION_PAGE}/id={self.id}"
 
+    @property
+    def total_infra(self) -> float:
+        infra = 0
+
+        for city in self.cities:
+            infra += city.infrastructure
+
+        return infra
+
+    @property
+    def total_land(self) -> float:
+        land = 0
+
+        for city in self.cities:
+            land += city.land
+
+        return land
+
+
 @attr.s(auto_attribs=True)
 class Alliance(_Base):
     accept_members: bool = None
