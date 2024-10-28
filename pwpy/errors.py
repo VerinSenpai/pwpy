@@ -50,6 +50,15 @@ class PWPYException(Exception):
     """
 
 
+class ModelMissingField(PWPYException):
+    """
+    Exception raised when a model helper function is missing a required field.
+    """
+
+    def __init__(self, value: str) -> None:
+        self.value = value
+
+
 class QueryError(PWPYException):
     """
     Overarching class for all Query exceptions.

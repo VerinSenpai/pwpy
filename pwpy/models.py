@@ -17,7 +17,7 @@
 
 from cattr import global_converter
 from typing import Any, List
-from pwpy import urls
+from pwpy import urls, errors
 from enum import Enum
 
 import typing
@@ -232,22 +232,44 @@ class Nation(_Base):
 
     @property
     def url(self) -> str:
+        if not self.id:
+            raise errors.ModelMissingField("id")
+
         return f"{urls.NATION_PAGE}/id={self.id}"
 
     @property
+    def message_url(self) -> str:
+        if not self.leader_name:
+            raise errors.ModelMissingField("leader_name")
+
+        return f"{urls.MESSAGE_PAGE}/receiver={self.leader_name}".replace(" ", "%20")
+
+    @property
     def total_infra(self) -> float:
+        if not self.cities:
+            raise errors.ModelMissingField("cities")
+
         infra = 0
 
         for city in self.cities:
+            if not city.infrastructure:
+                raise errors.ModelMissingField("infrastructure")
+
             infra += city.infrastructure
 
         return infra
 
     @property
     def total_land(self) -> float:
+        if not self.cities:
+            raise errors.ModelMissingField("cities")
+
         land = 0
 
         for city in self.cities:
+            if not city.land:
+                raise errors.ModelMissingField("land")
+
             land += city.land
 
         return land
@@ -294,4 +316,7 @@ class Alliance(_Base):
 
     @property
     def url(self) -> str:
+        if not self.id:
+            raise errors.ModelMissingField("id")
+
         return f"{urls.ALLIANCE_PAGE}/id={self.id}"
