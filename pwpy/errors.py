@@ -169,5 +169,5 @@ class SubscribeFailed(WatcherError):
 
 class AuthorizeFailed(WatcherError):
     """
-    Exception raised when an attempted authorize request fails.
+    Exception raised when an attempt to authorize request fails.
     """
