@@ -17,6 +17,9 @@
 
 from cattr import Converter
 from typing import Any, List
+
+from lightbulb import NotEnoughArguments
+
 from pwpy import urls, errors
 from enum import Enum
 from datetime import datetime
@@ -116,9 +119,34 @@ class DomesticPolicy(Enum):
 
 
 @attr.s(auto_attribs=True)
-class BulletinType(Enum):
-    nation: int = 1
-    alliance: int = 2
+class PostType(Enum):
+    NATION: int = 1
+    ALLIANCE: int = 2
+
+
+@attr.s(auto_attribs=True)
+class TradeType(Enum):
+    GLOBAL = "GLOBAL"
+    PERSONAL = "PERSONAL"
+    ALLIANCE = "ALLIANCE"
+
+
+@attr.s(auto_attribs=True)
+class BountyType(Enum):
+    ORDINARY = "ORDINARY"
+    ATTRITION = "ATTRITION"
+    RAID = "RAID"
+    NUCLEAR = "NUCLEAR"
+
+
+@attr.s(auto_attribs=True)
+class AlliancePosition(Enum):
+    NOALLIANCE = "NOALLIANCE"
+    APPLICANT = "APPLICANT"
+    MEMBER = "MEMBER"
+    OFFICER = "OFFICER"
+    HEIR = "HEIR"
+    LEADER = "LEADER"
 
 
 @attr.s(auto_attribs=True)
@@ -160,6 +188,58 @@ class GovernmentType(Enum):
 
 
 @attr.s(auto_attribs=True)
+class Award(_Base):
+    name: str = None
+    image: str = None
+
+
+@attr.s(auto_attribs=True)
+class Trade(_Base):
+    id: int = None
+    type: TradeType = None
+    date: datetime = None
+    sender_id: int = None
+    receiver_id: int = None
+    sender: "Nation" = None
+    receiver: "Nation" = None
+    offer_resource: str = None
+    offer_amount: int = None
+    buy_or_sell: str = None
+    price: int = None
+    accepted: bool = None
+    date_accepted: datetime = None
+    original_trade_id: int = None
+
+
+@attr.s(auto_attribs=True)
+class BankRecord(_Base):
+    id: int = None
+    date: datetime = None
+    sender_id: int = None
+    sender_type: PostType = None
+    sender: "Nation" = None
+    receiver_id: int = None
+    receiver_type: PostType = None
+    receiver: "Nation" = None
+    banker_id: int = None
+    banker: "Nation" = None
+    note: str = None
+    money: float = None
+    coal: float = None
+    oil: float = None
+    uranium: float = None
+    iron: float = None
+    bauxite: float = None
+    lead: float = None
+    gasoline: float = None
+    munitions: float = None
+    steel: float = None
+    aluminum: float = None
+    food: float = None
+    tax_id: int = None
+
+
+@attr.s(auto_attribs=True)
 class BulletinReply(_Base):
     id: int = None
     date: datetime = None
@@ -180,7 +260,7 @@ class Bulletin(_Base):
     nation: "Nation" = None
     alliance_id: int = None
     alliance: "Alliance" = None
-    type: BulletinType = None
+    type: PostType = None
     headline: str = None
     excerpt: str = None
     image: str = None
@@ -194,6 +274,153 @@ class Bulletin(_Base):
     edit_date: datetime = None
     archived: bool = None
     replies: List[BulletinReply] = None
+
+
+@attr.s(auto_attribs=True)
+class BaseballPlayer(_Base):
+    id: int = None
+    date: datetime = None
+    nation_id: int = None
+    nation: "Nation" = None
+    team_id: int = None
+    team: "BaseballTeam" = None
+    name: str = None
+    age: int = None
+    position: str = None
+    pitching: float = None
+    batting: float = None
+    speed: float = None
+    awareness: float = None
+    overall: float = None
+    birthday: int = None
+
+
+@attr.s(auto_attribs=True)
+class BaseballGame(_Base):
+    id: int = None
+    date: datetime = None
+    home_id: int = None
+    away_id: int = None
+    home_team: "BaseballTeam" = None
+    away_team: "BaseballTeam" = None
+    home_nation_id: int = None
+    away_nation_id: int = None
+    home_nation: "Nation" = None
+    away_nation: "Nation" = None
+    stadium_name: str = None
+    home_score: int = None
+    away_score: int = None
+    sim_text: str = None
+    highlights: str = None
+    home_revenue: float = None
+    spoils: float = None
+    open: int = None
+    wager: float = None
+
+
+@attr.s(auto_attribs=True)
+class BaseballTeam(_Base):
+    id: int = None
+    date: datetime = None
+    nation_id: int = None
+    nation: "Nation" = None
+    name: str = None
+    logo: str = None
+    home_jersey: str = None
+    away_jersey: str = None
+    stadium: str = None
+    quality: int = None
+    seating: int = None
+    rating: float = None
+    wins: int = None
+    glosses: int = None
+    runs: int = None
+    homers: int = None
+    strikeouts: int = None
+    games_played: int = None
+    games: BaseballGame = None
+    players: BaseballPlayer = None
+
+
+@attr.s(auto_attribs=True)
+class AlliancePositionInfo(_Base):
+    id: int = None
+    date: datetime = None
+    alliance_id: int = None
+    name: str = None
+    creator_id: int = None
+    last_editor_id: int = None
+    date_modified: datetime = None
+    position_level: int = None
+    leader: bool = None
+    heir: bool = None
+    officer: bool = None
+    member: bool = None
+    permissions: int = None
+    view_bank: bool = None
+    withdraw_bank: bool = None
+    change_permissions: bool = None
+    see_spies: bool = None
+    see_reset_timers: bool = None
+    tax_brackets: bool = None
+    post_announcements: bool = None
+    manage_announcements: bool = None
+    accept_applicants: bool = None
+    remove_members: bool = None
+    edit_alliance_info: bool = None
+    manage_treaties: bool = None
+    manage_market_share: bool = None
+    manage_embargoes: bool = None
+    promote_self_to_leader: bool = None
+
+
+@attr.s(auto_attribs=True)
+class Bounty(_Base):
+    id: int = None
+    date: datetime = None
+    nation_id: int = None
+    nation: "Nation" = None
+    amount: int = None
+    type: BountyType = None
+
+
+@attr.s(auto_attribs=True)
+class Treasure(_Base):
+    name: str = None
+    color: str = None
+    continent: str = None
+    bonus: int = None
+    spawn_date: str = None
+    nation_id: int = None
+    nation: "Nation" = None
+
+
+@attr.s(auto_attribs=True)
+class Treaty(_Base):
+    id: int = None
+    date: datetime = None
+    treaty_type: str = None
+    treaty_url: str = None
+    turns_left: int = None
+    alliance1_id: int = None
+    alliance1: "Alliance" = None
+    alliance2_id: int = None
+    alliance2: "Alliance" = None
+    approved: bool = None
+
+
+@attr.s(auto_attribs=True)
+class TaxBracket(_Base):
+    id: int = None
+    alliance_id: int = None
+    alliance: "Alliance" = None
+    date: datetime = None
+    date_modified: datetime = None
+    last_modifier_id: int = None
+    last_modifier: "Nation" = None
+    tax_rate: int = None
+    resource_tax_rate: int = None
+    bracket_name: str = None
 
 
 @attr.s(auto_attribs=True)
@@ -281,11 +508,11 @@ class War(_Base):
     turns_left: int = None
     att_id: int = None
     att_alliance_id: int = None
-    att_alliance_position: Any = None  # <---- Type and conversion
+    att_alliance_position: AlliancePosition = None
     attacker: "Nation" = None
     def_id: int = None
     def_alliance_id: int = None
-    def_alliance_position: Any = None
+    def_alliance_position: AlliancePosition = None
     defender: "Nation" = None
     att_points: int = None
     def_points: int = None
@@ -376,20 +603,20 @@ class Nation(_Base):
     alliance: "Alliance" = None
     alliance_id: int = None
     alliance_join_date: datetime = None
-    alliance_position: Any = None  # <---- Type and conversion
+    alliance_position: AlliancePosition = None
     alliance_position_id: int = None
-    alliance_position_info: Any = None  # <---- Type and conversion
+    alliance_position_info: AlliancePositionInfo = None
     alliance_seniority: int = None
     aluminum: float = None
     arable_land_agency: bool = None
     arms_stockpile: bool = None
-    awards: Any = None  # <---- Type and conversion
-    bankrecs: Any = None  # <---- Type and conversion
-    baseball_team: Any = None  # <---- Type and conversion
+    awards: List[Award] = None
+    bankrecs: List[BankRecord] = None
+    baseball_team: BaseballTeam = None
     bauxite: float = None
     bauxite_works: bool = None
     beige_turns: int = None
-    bounties: Any = None  # <---- Type and conversion
+    bounties: List[Bounty] = None
     bulletin_replies: List[BulletinReply] = None
     bulletins: List[Bulletin] = None
     bureau_of_domestic_affairs: bool = None
@@ -461,12 +688,12 @@ class Nation(_Base):
     project_bits: str = None
     projects: int = None
     propaganda_bureau: bool = None
-    received_bankrecs: Any = None  # <---- Type and conversion
+    received_bankrecs: List[BankRecord] = None
     recycling_initiative: bool = None
     research_and_development_center: bool = None
     resource_production_center: bool = None
     score: float = None
-    sent_bankrecs: Any = None  # <---- Type and conversion
+    sent_bankrecs: List[BankRecord] = None
     ship_casualties: int = None
     ship_kills: int = None
     ships: int = None
@@ -491,12 +718,12 @@ class Nation(_Base):
     tanks: int = None
     tanks_today: int = None
     tax_id: int = None
-    tax_recs: Any = None  # <---- Type and conversion
+    taxrecs: List[BankRecord] = None
     telecommunications_satellite: bool = None
     total_infrastructure_destroyed: float = None
     total_infrastructure_lost: float = None
-    trades: Any = None  # <---- Type and conversion
-    treasures: Any = None  # <---- Type and conversion
+    trades: List[Trade] = None
+    treasures: List[Treasure] = None
     turns_since_last_city: int = None
     turns_since_last_project: int = None
     update_tz: float = None
@@ -561,11 +788,11 @@ class Nation(_Base):
 class Alliance(_Base):
     accept_members: bool = None
     acronym: str = None
-    alliance_positions: Any = None  # <---- Type and conversion
+    alliance_positions: List[AlliancePositionInfo] = None
     aluminum: float = None
     average_score: float = None
-    awards: Any = None  # <---- Type and conversion
-    bankrecs: Any = None  # <---- Type and conversion
+    awards: List[Award] = None
+    bankrecs: List[BankRecord] = None
     bauxite: float = None
     bulletins: List[Bulletin] = None
     coal: float = None
@@ -585,13 +812,13 @@ class Alliance(_Base):
     nations: List[Nation] = None
     oil: float = None
     rank: int = None
-    received_treaties: Any = None  # <---- Type and conversion
+    received_treaties: List[Treaty] = None
     score: float = None
-    sent_treaties: Any = None  # <---- Type and conversion
+    sent_treaties: List[Treaty] = None
     steel: float = None
-    tax_brackets: Any = None  # <---- Type and conversion
-    taxrecs: Any = None  # <---- Type and conversion
-    treaties: Any = None  # <---- Type and conversion
+    tax_brackets: List[TaxBracket] = None
+    taxrecs: List[BankRecord] = None
+    treaties: List[Treaty] = None
     uranium: float = None
     wars: List[War] = None
     wiki_link: str = None
