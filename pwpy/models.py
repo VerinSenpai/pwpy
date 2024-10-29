@@ -1,5 +1,6 @@
 # This is part of Requiem
 # Copyright (C) 2020  Verin Senpai
+from xml.sax.handler import property_dom_node
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -756,6 +757,14 @@ class Nation(_Base):
             raise errors.ModelMissingField("leader_name")
 
         return f"{urls.CITY_MANAGER_PAGE}&l={self.leader_name}"
+
+    @property
+    def war_range_url(self) -> str:
+        if not self.score:
+            raise errors.ModelMissingField("score")
+
+        return (f"{urls.WARS_PAGE}&keyword={self.score}&cat=war_range"
+                f"&ob=score&od=ASC&beige=true&vmode=false&openslots=true")
 
     @property
     def score_range(self) -> (float, float):
