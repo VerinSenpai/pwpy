@@ -16,11 +16,8 @@
 
 
 from cattr import Converter
-from typing import Any, List
-
-from lightbulb import NotEnoughArguments
-
-from pwpy import urls, errors
+from typing import List
+from pwpy import urls, errors, utils
 from enum import Enum
 from datetime import datetime
 
@@ -759,6 +756,13 @@ class Nation(_Base):
             raise errors.ModelMissingField("leader_name")
 
         return f"{urls.CITY_MANAGER_PAGE}&l={self.leader_name}"
+
+    @property
+    def score_range(self) -> (float, float):
+        if not self.score:
+            raise errors.ModelMissingField("score")
+
+        return utils.score_range(self.score)
 
     @property
     def total_infra(self) -> float:
