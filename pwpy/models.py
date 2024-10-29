@@ -164,7 +164,7 @@ class BulletinReply(_Base):
     id: int = None
     date: datetime = None
     nation_id: int = None
-    nation: "Nation" = attr.ib(factory=lambda: Nation)
+    nation: "Nation" = None
     bulletin_id: int = None
     message: str = None
     edit_date: datetime = None
@@ -177,9 +177,9 @@ class BulletinReply(_Base):
 class Bulletin(_Base):
     id: int = None
     nation_id: int = None
-    nation: "Nation" = attr.ib(factory=lambda: Nation)
+    nation: "Nation" = None
     alliance_id: int = None
-    alliance: "Alliance" = attr.ib(factory=lambda: Alliance)
+    alliance: "Alliance" = None
     type: BulletinType = None
     headline: str = None
     excerpt: str = None
@@ -208,12 +208,12 @@ class WarAttack(_Base):
     id: int = None
     date: datetime = None
     att_id: int = None
-    attacker: "Nation" = attr.ib(factory=lambda: Nation)
+    attacker: "Nation" = None
     def_id: int = None
-    defender: "Nation" = attr.ib(factory=lambda: Nation)
+    defender: "Nation" = None
     type: AttackType = None
     war_id: int = None
-    war: "War" = attr.ib(factory=lambda: War)
+    war: "War" = None
     victor: int = None
     success: int = None
     city_id: int = None
@@ -277,16 +277,16 @@ class War(_Base):
     air_superiority: int = None
     naval_blockade: int = None
     winner_id: int = None
-    attacks: Any = None  # <---- Type and conversion
+    attacks: List[WarAttack] = None
     turns_left: int = None
     att_id: int = None
     att_alliance_id: int = None
     att_alliance_position: Any = None  # <---- Type and conversion
-    attacker: "Nation" = attr.ib(factory=lambda: Nation)
+    attacker: "Nation" = None
     def_id: int = None
     def_alliance_id: int = None
     def_alliance_position: Any = None
-    defender: "Nation" = attr.ib(factory=lambda: Nation)
+    defender: "Nation" = None
     att_points: int = None
     def_points: int = None
     att_peace: bool = None
@@ -344,7 +344,7 @@ class City(_Base):
     lead_mine: int = None
     munitions_factory: int = None
     name: str = None
-    nation: "Nation" = attr.ib(factory=lambda: Nation)
+    nation: "Nation" = None
     nation_id: int = None
     nuclear_power: int = None
     nuke_date: datetime = None
@@ -373,7 +373,7 @@ class Nation(_Base):
     aircraft_casualties: int = None
     aircraft_kills: int = None
     aircraft_today: int = None
-    alliance: "Alliance" = attr.ib(factory=lambda: Alliance)
+    alliance: "Alliance" = None
     alliance_id: int = None
     alliance_join_date: datetime = None
     alliance_position: Any = None  # <---- Type and conversion
