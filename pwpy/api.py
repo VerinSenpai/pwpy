@@ -98,6 +98,10 @@ def _convert_fields_to_string(data: typing.Union[str, dict, typing.Sequence]) ->
                 converted_fields: str = ' '.join(_convert_sequence_to_string(field_value))
                 yield f"{field_name} {{{converted_fields}}}"
 
+            elif isinstance(field_value, dict):
+                converted_fields: str = ' '.join(_convert_fields_to_string(field_value))
+                yield f"{field_name} {{{converted_fields}}}"
+
     elif isinstance(data, str):
         yield data
 
