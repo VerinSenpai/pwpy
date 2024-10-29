@@ -15,20 +15,58 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from cattr import global_converter
+from cattr import Converter
 from typing import Any, List
 from pwpy import urls, errors
 from enum import Enum
+from datetime import datetime
 
 import typing
 import attr
+
+
+_CONVERTER = Converter()
+
+
+def _str_to_datetime(date_str: str, _) -> datetime:
+    return datetime.fromisoformat(date_str)
+
+
+_CONVERTER.register_structure_hook(datetime, _str_to_datetime)
 
 
 class _Base:
 
     @classmethod
     def convert(cls, data: dict) -> typing.Any:
-        return global_converter.structure(data, cls)
+        return _CONVERTER.structure(data, cls)
+
+
+@attr.s(auto_attribs=True)
+class AttackType(Enum):
+    AIRVINFRA = "AIRVINFRA"
+    AIRVSOLDIERS = "AIRVSOLDIERS"
+    AIRVTANKS = "AIRVTANKS"
+    AIRVMONEY = "AIRVMONEY"
+    AIRVSHIPS = "AIRVSHIPS"
+    AIRVAIR = "AIRVAIR"
+    GROUND = "GROUND"
+    MISSILE = "MISSILE"
+    MISSILEFAIL = "MISSILEFAIL"
+    NUKE = "NUKE"
+    NUKEFAIL = "NUKEFAIL"
+    NAVAL = "NAVAL"
+    FORTIFY = "FORTIFY"
+    PEACE = "PEACE"
+    VICTORY = "VICTORY"
+    ALLIANCELOOT = "ALLIANCELOOT"
+
+
+@attr.s(auto_attribs=True)
+class WarType(Enum):
+    ORDINARY = "ORDINARY"
+    ATTRITION = "ATTRITION"
+    RAID = "RAID"
 
 
 @attr.s(auto_attribs=True)
@@ -124,12 +162,12 @@ class GovernmentType(Enum):
 @attr.s(auto_attribs=True)
 class BulletinReply(_Base):
     id: int = None
-    date: Any = None
+    date: datetime = None
     nation_id: int = None
     nation: "Nation" = attr.ib(factory=lambda: Nation)
     bulletin_id: int = None
     message: str = None
-    edit_date: int = None
+    edit_date: datetime = None
     nation_name: str = None
     leader_name: str = None
     like_count: int = None
@@ -152,20 +190,89 @@ class Bulletin(_Base):
     like_count: int = None
     replies_enabled: bool = None
     locked: bool = None
-    date: Any = None  # <---- Type and conversion
-    edit_date: Any = None  # <---- Type and conversion
+    date: datetime = None
+    edit_date: datetime = None
     archived: bool = None
     replies: List[BulletinReply] = None
 
+
+@attr.s(auto_attribs=True)
+class CityInfraDamage(_Base):
+    """What the hell is this?"""
+    id: int = None
+    infrastructure: float = None
+
+
+@attr.s(auto_attribs=True)
+class WarAttack(_Base):
+    id: int = None
+    date: datetime = None
+    att_id: int = None
+    attacker: "Nation" = attr.ib(factory=lambda: Nation)
+    def_id: int = None
+    defender: "Nation" = attr.ib(factory=lambda: Nation)
+    type: AttackType = None
+    war_id: int = None
+    war: "War" = attr.ib(factory=lambda: War)
+    victor: int = None
+    success: int = None
+    city_id: int = None
+    infra_destroyed: float = None
+    money_stolen: float = None
+    resistance_lost: int = None
+    city_infra_before: float = None
+    infra_destroyed_value: float = None
+    att_mun_used: float = None
+    def_mun_used: float = None
+    att_gas_used: float = None
+    def_gas_used: float = None
+    money_destroyed: float = None
+    military_salvage_aluminum: float = None
+    military_salvage_steel: float = None
+    att_soldiers_used: int = None
+    att_soldiers_lost: int = None
+    def_soldiers_used: int = None
+    def_soldiers_lost: int = None
+    att_tanks_used: int = None
+    att_tanks_lost: int = None
+    def_tanks_used: int = None
+    def_tanks_lost: int = None
+    att_aircraft_used: int = None
+    att_aircraft_lost: int = None
+    def_aircraft_used: int = None
+    def_aircraft_lost: int = None
+    att_ships_used: int = None
+    att_ships_lost: int = None
+    def_ships_used: int = None
+    def_ships_lost: int = None
+    att_missiles_lost: int = None
+    def_missiles_lost: int = None
+    att_nukes_lost: int = None
+    def_nukes_lost: int = None
+    improvements_destroyed: str = None
+    infra_destroyed_percentage: float = None
+    cities_infra_before: CityInfraDamage = None
+    money_looted: float = None
+    coal_looted: float = None
+    oil_looted: float = None
+    uranium_looted: float = None
+    iron_looted: float = None
+    bauxite_looted: float = None
+    lead_looted: float = None
+    gasoline: float = None
+    munitions_looted: float = None
+    steel_looted: float = None
+    aluminum_looted: float = None
+    food_looted: float = None
 
 
 @attr.s(auto_attribs=True)
 class War(_Base):
     id: int = None
-    date: Any = None  # <---- Type and conversion
-    end_date: Any = None  # <---- Type and conversion
+    date: datetime = None
+    end_date: datetime = None
     reason: str = None
-    war_type: Any = None  # <---- Type and conversion
+    war_type: WarType = None
     ground_control: int = None
     air_superiority: int = None
     naval_blockade: int = None
@@ -224,7 +331,7 @@ class City(_Base):
     bauxite_mine: int = None
     coal_mine: int = None
     coal_power: int = None
-    date: Any = None  # <---- Type and conversion
+    date: datetime = None
     drydock: int = None
     factory: int = None
     farm: int = None
@@ -240,7 +347,7 @@ class City(_Base):
     nation: "Nation" = attr.ib(factory=lambda: Nation)
     nation_id: int = None
     nuclear_power: int = None
-    nuke_date: Any = None  # <---- Type and conversion
+    nuke_date: datetime = None
     oil_power: int = None
     oil_refinery: int = None
     oil_well: int = None
@@ -268,7 +375,7 @@ class Nation(_Base):
     aircraft_today: int = None
     alliance: "Alliance" = attr.ib(factory=lambda: Alliance)
     alliance_id: int = None
-    alliance_join_date: Any = None  # <---- Type and conversion
+    alliance_join_date: datetime = None
     alliance_position: Any = None  # <---- Type and conversion
     alliance_position_id: int = None
     alliance_position_info: Any = None  # <---- Type and conversion
@@ -296,7 +403,7 @@ class Nation(_Base):
     continent: str = None
     credits: int = None
     credits_redeemed_this_month: int = None
-    date: Any = None  # <---- Type and conversion
+    date: datetime = None
     defensive_wars_count: int = None
     denouncements: int = None
     discord: str = None
@@ -325,7 +432,7 @@ class Nation(_Base):
     lead: float = None
     leader_name: str = None
     mars_landing: bool = None
-    mars_landing_date: Any = None  # <---- Type and conversion
+    mars_landing_date: datetime = None
     mass_irrigation: bool = None
     metropolitan_planning: bool = None
     military_salvage: bool = None
@@ -337,7 +444,7 @@ class Nation(_Base):
     money: float = None
     money_looted: float = None
     moon_landing: bool = None
-    moon_landing_date: Any = None  # <---- Type and conversion
+    moon_landing_date: datetime = None
     munitions: float = None
     nation_name: str = None
     nuclear_launch_facility: bool = None
@@ -463,7 +570,7 @@ class Alliance(_Base):
     bulletins: List[Bulletin] = None
     coal: float = None
     color: str = None
-    date: Any = None
+    date: datetime = None
     discord_link: str = None
     flag: str = None
     food: float = None
