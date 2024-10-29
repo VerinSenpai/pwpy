@@ -428,7 +428,7 @@ class Nation(_Base):
     iron: float = None
     iron_dome: bool = None
     iron_works: bool = None
-    last_active: Any = None  # <---- Type and conversion
+    last_active: datetime = None
     lead: float = None
     leader_name: str = None
     mars_landing: bool = None
