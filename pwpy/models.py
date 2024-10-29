@@ -754,6 +754,13 @@ class Nation(_Base):
         return f"{urls.MESSAGE_PAGE}/receiver={self.leader_name}".replace(" ", "%20")
 
     @property
+    def city_manager_url(self) -> str:
+        if not self.leader_name:
+            raise errors.ModelMissingField("leader_name")
+
+        return f"{urls.CITY_MANAGER_PAGE}&l={self.leader_name}"
+
+    @property
     def total_infra(self) -> float:
         if not self.cities:
             raise errors.ModelMissingField("cities")
