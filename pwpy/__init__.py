@@ -28,6 +28,7 @@ __all__ = [
     "urls",
     "scrape",
     "converters",
+    "set_global_key",
     "get_query",
     "BulkQuery",
     "SocketMonitor",
