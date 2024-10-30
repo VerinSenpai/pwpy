@@ -26,6 +26,40 @@ import typing
 import attr
 
 
+__all__ = [
+    "AttackType",
+    "WarType",
+    "SocialPolicy",
+    "WarPolicy",
+    "EconomicPolicy",
+    "DomesticPolicy",
+    "PostType",
+    "TradeType",
+    "BountyType",
+    "AlliancePosition",
+    "GovernmentType",
+    "Award",
+    "Trade",
+    "BankRecord",
+    "BulletinReply",
+    "Bulletin",
+    "BaseballPlayer",
+    "BaseballGame",
+    "BaseballTeam",
+    "AlliancePositionInfo",
+    "Bounty",
+    "Treaty",
+    "Treasure",
+    "TaxBracket",
+    "CityInfraDamage",
+    "WarAttack",
+    "War",
+    "City",
+    "Nation",
+    "Alliance"
+]
+
+
 _CONVERTER = Converter()
 
 
@@ -36,15 +70,21 @@ def _str_to_datetime(date_str: str, _) -> datetime:
 _CONVERTER.register_structure_hook(datetime, _str_to_datetime)
 
 
-class _Base:
+class _BaseConverter:
 
     @classmethod
     def convert(cls, data: dict) -> typing.Any:
         return _CONVERTER.structure(data, cls)
 
 
+class _BaseEnum(Enum):
+
+    def __str__(self) -> str:
+        return str(self.value).replace("_", " ").title()
+
+
 @attr.s(auto_attribs=True)
-class AttackType(Enum):
+class AttackType(_BaseEnum):
     AIRVINFRA = "AIRVINFRA"
     AIRVSOLDIERS = "AIRVSOLDIERS"
     AIRVTANKS = "AIRVTANKS"
@@ -64,14 +104,14 @@ class AttackType(Enum):
 
 
 @attr.s(auto_attribs=True)
-class WarType(Enum):
+class WarType(_BaseEnum):
     ORDINARY = "ORDINARY"
     ATTRITION = "ATTRITION"
     RAID = "RAID"
 
 
 @attr.s(auto_attribs=True)
-class SocialPolicy(Enum):
+class SocialPolicy(_BaseEnum):
     ANARCHIST = "ANARCHIST"
     LIBERTARIAN = "LIBERTARIAN"
     LIBERAL = "LIBERAL"
@@ -82,7 +122,7 @@ class SocialPolicy(Enum):
 
 
 @attr.s(auto_attribs=True)
-class WarPolicy(Enum):
+class WarPolicy(_BaseEnum):
     ATTRITION = "ATTRITION"
     TURTLE = "TURTLE"
     BLITZKRIEG = "BLITZKRIEG"
@@ -96,7 +136,7 @@ class WarPolicy(Enum):
 
 
 @attr.s(auto_attribs=True)
-class EconomicPolicy(Enum):
+class EconomicPolicy(_BaseEnum):
     EXTREME_LEFT = "EXTREME_LEFT"
     FAR_LEFT = "FAR_LEFT"
     LEFT = "LEFT"
@@ -107,7 +147,7 @@ class EconomicPolicy(Enum):
 
 
 @attr.s(auto_attribs=True)
-class DomesticPolicy(Enum):
+class DomesticPolicy(_BaseEnum):
     MANIFEST_DESTINY = "MANIFEST_DESTINY"
     OPEN_MARKETS = "OPEN_MARKETS"
     TECHNOLOGICAL_ADVANCEMENT = "TECHNOLOGICAL_ADVANCEMENT"
@@ -117,20 +157,20 @@ class DomesticPolicy(Enum):
 
 
 @attr.s(auto_attribs=True)
-class PostType(Enum):
+class PostType(_BaseEnum):
     NATION: int = 1
     ALLIANCE: int = 2
 
 
 @attr.s(auto_attribs=True)
-class TradeType(Enum):
+class TradeType(_BaseEnum):
     GLOBAL = "GLOBAL"
     PERSONAL = "PERSONAL"
     ALLIANCE = "ALLIANCE"
 
 
 @attr.s(auto_attribs=True)
-class BountyType(Enum):
+class BountyType(_BaseEnum):
     ORDINARY = "ORDINARY"
     ATTRITION = "ATTRITION"
     RAID = "RAID"
@@ -138,7 +178,7 @@ class BountyType(Enum):
 
 
 @attr.s(auto_attribs=True)
-class AlliancePosition(Enum):
+class AlliancePosition(_BaseEnum):
     NOALLIANCE = "NOALLIANCE"
     APPLICANT = "APPLICANT"
     MEMBER = "MEMBER"
@@ -148,7 +188,7 @@ class AlliancePosition(Enum):
 
 
 @attr.s(auto_attribs=True)
-class GovernmentType(Enum):
+class GovernmentType(_BaseEnum):
     ABSOLUTE_MONARCHY = "ABSOLUTE_MONARCHY"
     ANARCHY = "ANARCHY"
     ARISTOCRACY = "ARISTOCRACY"
@@ -186,13 +226,13 @@ class GovernmentType(Enum):
 
 
 @attr.s(auto_attribs=True)
-class Award(_Base):
+class Award(_BaseConverter):
     name: str = None
     image: str = None
 
 
 @attr.s(auto_attribs=True)
-class Trade(_Base):
+class Trade(_BaseConverter):
     id: int = None
     type: TradeType = None
     date: datetime = None
@@ -210,7 +250,7 @@ class Trade(_Base):
 
 
 @attr.s(auto_attribs=True)
-class BankRecord(_Base):
+class BankRecord(_BaseConverter):
     id: int = None
     date: datetime = None
     sender_id: int = None
@@ -238,7 +278,7 @@ class BankRecord(_Base):
 
 
 @attr.s(auto_attribs=True)
-class BulletinReply(_Base):
+class BulletinReply(_BaseConverter):
     id: int = None
     date: datetime = None
     nation_id: int = None
@@ -252,7 +292,7 @@ class BulletinReply(_Base):
 
 
 @attr.s(auto_attribs=True)
-class Bulletin(_Base):
+class Bulletin(_BaseConverter):
     id: int = None
     nation_id: int = None
     nation: "Nation" = None
@@ -275,7 +315,7 @@ class Bulletin(_Base):
 
 
 @attr.s(auto_attribs=True)
-class BaseballPlayer(_Base):
+class BaseballPlayer(_BaseConverter):
     id: int = None
     date: datetime = None
     nation_id: int = None
@@ -294,7 +334,7 @@ class BaseballPlayer(_Base):
 
 
 @attr.s(auto_attribs=True)
-class BaseballGame(_Base):
+class BaseballGame(_BaseConverter):
     id: int = None
     date: datetime = None
     home_id: int = None
@@ -317,7 +357,7 @@ class BaseballGame(_Base):
 
 
 @attr.s(auto_attribs=True)
-class BaseballTeam(_Base):
+class BaseballTeam(_BaseConverter):
     id: int = None
     date: datetime = None
     nation_id: int = None
@@ -341,7 +381,7 @@ class BaseballTeam(_Base):
 
 
 @attr.s(auto_attribs=True)
-class AlliancePositionInfo(_Base):
+class AlliancePositionInfo(_BaseConverter):
     id: int = None
     date: datetime = None
     alliance_id: int = None
@@ -373,7 +413,7 @@ class AlliancePositionInfo(_Base):
 
 
 @attr.s(auto_attribs=True)
-class Bounty(_Base):
+class Bounty(_BaseConverter):
     id: int = None
     date: datetime = None
     nation_id: int = None
@@ -383,7 +423,7 @@ class Bounty(_Base):
 
 
 @attr.s(auto_attribs=True)
-class Treasure(_Base):
+class Treasure(_BaseConverter):
     name: str = None
     color: str = None
     continent: str = None
@@ -394,7 +434,7 @@ class Treasure(_Base):
 
 
 @attr.s(auto_attribs=True)
-class Treaty(_Base):
+class Treaty(_BaseConverter):
     id: int = None
     date: datetime = None
     treaty_type: str = None
@@ -408,7 +448,7 @@ class Treaty(_Base):
 
 
 @attr.s(auto_attribs=True)
-class TaxBracket(_Base):
+class TaxBracket(_BaseConverter):
     id: int = None
     alliance_id: int = None
     alliance: "Alliance" = None
@@ -422,14 +462,14 @@ class TaxBracket(_Base):
 
 
 @attr.s(auto_attribs=True)
-class CityInfraDamage(_Base):
+class CityInfraDamage(_BaseConverter):
     """What the hell is this?"""
     id: int = None
     infrastructure: float = None
 
 
 @attr.s(auto_attribs=True)
-class WarAttack(_Base):
+class WarAttack(_BaseConverter):
     id: int = None
     date: datetime = None
     att_id: int = None
@@ -492,7 +532,7 @@ class WarAttack(_Base):
 
 
 @attr.s(auto_attribs=True)
-class War(_Base):
+class War(_BaseConverter):
     id: int = None
     date: datetime = None
     end_date: datetime = None
@@ -549,7 +589,7 @@ class War(_Base):
 
 
 @attr.s(auto_attribs=True)
-class City(_Base):
+class City(_BaseConverter):
     aluminum_refinery: int = None
     bank: int = None
     barracks: int = None
@@ -589,7 +629,7 @@ class City(_Base):
 
 
 @attr.s(auto_attribs=True)
-class Nation(_Base):
+class Nation(_BaseConverter):
     activity_center: bool = None
     advanced_engineering_corps: bool = None
     advanced_pirate_economy: bool = None
@@ -805,7 +845,7 @@ class Nation(_Base):
 
 
 @attr.s(auto_attribs=True)
-class Alliance(_Base):
+class Alliance(_BaseConverter):
     accept_members: bool = None
     acronym: str = None
     alliance_positions: List[AlliancePositionInfo] = None
