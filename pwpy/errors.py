@@ -23,11 +23,12 @@
 
 __all__ = [
     "PWPYException",
+    "ModelMissingField",
     "QueryError",
     "ScrapeError",
     "TargetInvalid",
-    "WatcherError",
-    "WatcherStateError",
+    "MonitorError",
+    "MonitorStateError",
     "SubscribeFailed",
     "AuthorizeFailed",
     "QuerySyntaxError",
@@ -40,8 +41,7 @@ __all__ = [
     "UnexpectedResponse",
     "ResponseFormatError",
     "CloudflareError",
-    "LoginInvalid",
-    "ModelMissingField"
+    "LoginInvalid"
 ]
 
 
@@ -159,25 +159,25 @@ class TargetInvalid(ScrapeError):
     """
 
 
-class WatcherError(PWPYException):
+class MonitorError(PWPYException):
     """
     Overarching class for all Watcher exceptions.
     """
 
 
-class WatcherStateError(WatcherError):
+class MonitorStateError(MonitorError):
     """
     Exception raised when an action is carried out during an incorrect state.
     """
 
 
-class SubscribeFailed(WatcherError):
+class SubscribeFailed(MonitorError):
     """
     Exception raised when a subscribe attempt fails.
     """
 
 
-class AuthorizeFailed(WatcherError):
+class AuthorizeFailed(MonitorError):
     """
     Exception raised when an attempt to authorize request fails.
     """

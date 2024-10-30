@@ -36,11 +36,20 @@ _LOGGER = logging.getLogger("pwpy.events")
 
 
 __all__: typing.List[str] = [
+    "set_global_key",
     "get_query",
     "BulkQuery",
-    "SocketWrapper",
-    "QueryWrapper",
+    "SocketMonitor",
+    "Listener"
 ]
+
+
+_API_KEY: str | None = None
+
+
+def set_global_key(api_key: str) -> None:
+    global _API_KEY
+    _API_KEY = api_key
 
 
 def _ratelimit(func):
@@ -171,7 +180,7 @@ def _raise_status_exception(status, headers) -> None:
 
 
 @_ratelimit
-async def get_query(query: typing.Union[str, dict], api_key: str) -> dict:
+async def get_query(query: typing.Union[str, dict], api_key: str = None) -> dict:
     """
     Post a GQL query, parsing for errors and returning the data.
 
@@ -179,6 +188,11 @@ async def get_query(query: typing.Union[str, dict], api_key: str) -> dict:
     :param api_key: A valid Politics And War API key.
     :return: API response data.
     """
+    api_key = api_key or _API_KEY
+
+    if api_key is None:
+        raise ValueError("Missing API key! Provide an api_key to get_query directly or initialize PWPY with one.")
+
     payload: dict = {"api_key": api_key, "query": f"{{{_convert_dict_to_query(query)}}}"}
 
     async with aiohttp.ClientSession() as session:
@@ -200,12 +214,16 @@ class BulkQuery:
     """
     Build, chunk, and post mass queries.
     """
-    def __init__(self, api_key: str, *, chunk_size: int = 10):
+    def __init__(self, api_key: str = None, *, chunk_size: int = 10):
         """
         :param api_key: A valid Politics And War API key.
         :param chunk_size: The number of queries to send in each payload.
         """
-        self._api_key: str = api_key
+        self._api_key: str = api_key or _API_KEY
+
+        if self._api_key is None:
+            raise ValueError("Missing API key! Provide an api_key to BulkQuery directly or initialize PWPY with one.")
+
         self._queries: set = set()
 
         if chunk_size < 1:
@@ -268,12 +286,18 @@ class Listener:
         self.active: asyncio.Event = asyncio.Event()
 
 
-class SocketWrapper:
+class SocketMonitor:
     def __init__(self, api_key: str, *, loop: typing.Optional[asyncio.BaseEventLoop] = None):
         if loop is None:
             loop = asyncio.get_event_loop()
 
-        self._api_key: str = api_key
+        self._api_key: str = api_key or _API_KEY
+
+        if self._api_key is None:
+            raise ValueError(
+                "Missing API key! Provide an api_key to SocketMonitor directly or initialize PWPY with one."
+            )
+
         self._tasks: typing.Set[asyncio.Task] = set()
         self._loop = loop
         self._running: bool = False
@@ -302,7 +326,7 @@ class SocketWrapper:
 
     async def run(self):
         if self._running:
-            raise errors.WatcherStateError("watcher is already running!")
+            raise errors.MonitorStateError("monitor is already running!")
 
         elif self._closing.is_set():
             await self._closing.wait()
@@ -316,10 +340,10 @@ class SocketWrapper:
 
     async def stop(self):
         if not self._running:
-            raise errors.WatcherStateError("watcher is not currently running!")
+            raise errors.MonitorStateError("monitor is not currently running!")
 
         elif self._closing.is_set():
-            raise errors.WatcherStateError("watcher is already closing!")
+            raise errors.MonitorStateError("monitor is already closing!")
 
         self._running = False
         self._closing.set()
@@ -546,7 +570,7 @@ class SocketWrapper:
 
     async def subscribe(self, listener: Listener):
         if self._closing.is_set():
-            raise errors.WatcherStateError()
+            raise errors.MonitorStateError()
 
         elif self._running and self._socket.closed:
             await self._reconnect()
@@ -571,16 +595,3 @@ class SocketWrapper:
             return coro
 
         return decorator
-
-
-class QueryWrapper:
-
-    def __init__(self, api_key: str) -> None:
-        self._api_key: str = api_key
-        self._watcher: typing.Optional[SocketWrapper] = None
-
-    async def get_query(self, query: typing.Union[str, dict]) -> dict:
-        return await get_query(query, self._api_key)
-
-    def bulk_query(self, *, chunk_size: int = 10) -> BulkQuery:
-        return BulkQuery(self._api_key, chunk_size=chunk_size)
