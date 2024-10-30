@@ -27,11 +27,91 @@ __all__ = [
     "utils",
     "urls",
     "scrape",
-    "converters.py",
+    "converters",
+    "get_query",
+    "BulkQuery",
+    "SocketWrapper",
+    "QueryWrapper",
+    "AttackType",
+    "WarType",
+    "SocialPolicy",
+    "WarPolicy",
+    "EconomicPolicy",
+    "DomesticPolicy",
+    "PostType",
+    "TradeType",
+    "BountyType",
+    "AlliancePosition",
+    "GovernmentType",
+    "Award",
+    "Trade",
+    "BankRecord",
+    "BulletinReply",
+    "Bulletin",
+    "BaseballPlayer",
+    "BaseballGame",
+    "BaseballTeam",
+    "AlliancePositionInfo",
+    "Bounty",
+    "Treaty",
+    "Treasure",
+    "TaxBracket",
+    "CityInfraDamage",
+    "WarAttack",
+    "War",
+    "City",
+    "Nation",
+    "Alliance",
+    "PWPYException",
+    "QueryError",
+    "ScrapeError",
+    "TargetInvalid",
+    "WatcherError",
+    "WatcherStateError",
+    "SubscribeFailed",
+    "AuthorizeFailed",
+    "QuerySyntaxError",
+    "QueryFieldError",
+    "QueryArgumentInvalid",
+    "QueryKeyError",
+    "QueryMissingSubSelection",
+    "RateLimitHit",
+    "ServiceUnavailable",
+    "UnexpectedResponse",
+    "ResponseFormatError",
+    "CloudflareError",
+    "LoginInvalid",
+    "ModelMissingField",
+    "login",
+    "send_message",
+    "MessageSession",
+    "NATION_PAGE",
+    "ALLIANCE_PAGE",
+    "MESSAGE_PAGE",
+    "CITY_MANAGER_PAGE",
+    "WARS_PAGE",
+    "score_range",
+    "infra_cost",
+    "land_cost",
+    "city_cost",
+    "sort_ongoing_wars",
     "__version__"
 ]
 
 
-from pwpy import api, errors, utils, converters, scrape, urls
+from pwpy import api
+from pwpy import errors
+from pwpy import utils
+from pwpy import converters
+from pwpy import scrape
+from pwpy import urls
+
+from pwpy.api import *
+from pwpy.errors import *
+from pwpy.utils import *
+from pwpy.converters import *
+from pwpy.scrape import *
+from pwpy.urls import *
+
 
 __version__ = "0.7.0"

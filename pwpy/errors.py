@@ -41,6 +41,7 @@ __all__ = [
     "ResponseFormatError",
     "CloudflareError",
     "LoginInvalid",
+    "ModelMissingField"
 ]
 
 

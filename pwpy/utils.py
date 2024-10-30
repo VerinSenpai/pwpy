@@ -25,7 +25,7 @@ import typing
 import math
 
 
-__all__: typing.List[str] = [
+__all__ = [
     "score_range",
     "infra_cost",
     "land_cost",

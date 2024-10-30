@@ -21,6 +21,15 @@
 # SOFTWARE.
 
 
+__all__ = [
+    "NATION_PAGE",
+    "ALLIANCE_PAGE",
+    "MESSAGE_PAGE",
+    "CITY_MANAGER_PAGE",
+    "WARS_PAGE"
+]
+
+
 NATION_PAGE = "https://politicsandwar.com/nation"
 ALLIANCE_PAGE = "https://politicsandwar.com/alliance"
 MESSAGE_PAGE = "https://politicsandwar.com/inbox/message"
