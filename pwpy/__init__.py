@@ -27,11 +27,11 @@ __all__ = [
     "utils",
     "urls",
     "scrape",
-    "models",
+    "converters.py",
     "__version__"
 ]
 
 
-from pwpy import api, errors, utils, models, scrape, urls
+from pwpy import api, errors, utils, converters, scrape, urls
 
 __version__ = "0.7.0"
