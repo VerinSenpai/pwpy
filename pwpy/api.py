@@ -256,7 +256,7 @@ class BulkQuery:
 
         :param query: A properly formatted GQL string or a dict that can be converted into a GQL string.
         """
-        self._queries.add(_convert_dict_to_query(query))
+        self._queries.add(convert_dict_to_query(query))
 
     async def get(self) -> dict:
         """
