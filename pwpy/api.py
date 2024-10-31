@@ -37,6 +37,7 @@ _LOGGER = logging.getLogger("pwpy.events")
 
 __all__: typing.List[str] = [
     "set_global_key",
+    "convert_dict_to_query",
     "get_query",
     "BulkQuery",
     "SocketMonitor",
@@ -121,7 +122,7 @@ def _convert_fields_to_string(data: typing.Union[str, dict, typing.Sequence]) ->
         raise TypeError("fields must be of type str, dict, or typing.Sequence!")
 
 
-def _convert_dict_to_query(query_data: typing.Union[str, dict]) -> str:
+def convert_dict_to_query(query_data: typing.Union[str, dict]) -> str:
     """
     Convert a properly formatted dict into a graphql string.
 
@@ -193,7 +194,7 @@ async def get_query(query: typing.Union[str, dict], api_key: str = None) -> dict
     if api_key is None:
         raise ValueError("Missing API key! Provide an api_key to get_query directly or initialize PWPY with one.")
 
-    payload: dict = {"api_key": api_key, "query": f"{{{_convert_dict_to_query(query)}}}"}
+    payload: dict = {"api_key": api_key, "query": f"{{{convert_dict_to_query(query)}}}"}
 
     async with aiohttp.ClientSession() as session:
         async with session.post("https://api.politicsandwar.com/graphql", json=payload) as response:

@@ -29,6 +29,7 @@ __all__ = [
     "scrape",
     "converters",
     "set_global_key",
+    "convert_dict_to_query",
     "get_query",
     "BulkQuery",
     "SocketMonitor",
