@@ -50,6 +50,7 @@ _API_KEY: str | None = None
 
 def set_global_key(api_key: str) -> None:
     global _API_KEY
+
     _API_KEY = api_key
 
 
@@ -77,78 +78,52 @@ def _ratelimit(func):
     return wrapper
 
 
-def _convert_args_to_string(args: dict) -> typing.Generator:
-    """Converts dict of args to string."""
-    for key, value in args.items():
-        if isinstance(value, str):
-            yield f'{key}:"{value}"'
+def _convert_model_tuple_data(model: str, data: tuple) -> str:
+    items = []
 
-        else:
-            yield f'{key}:{value}'
+    for item in data:
+        if isinstance(item, dict):
+            items.append(_convert_model_data("", item))
 
+        elif isinstance(item, str):
+            items.append(item)
 
-def _convert_sequence_to_string(field_data: typing.Sequence) -> typing.Generator:
-    """Converts tuples/lists into strings."""
-    for field in field_data:
-        if isinstance(field, dict):
-            yield ' '.join(_convert_fields_to_string(field))
-
-        elif isinstance(field, str):
-            yield field
+    return f"{model}{{{" ".join(items)}}}"
 
 
-def _convert_fields_to_string(data: typing.Union[str, dict, typing.Sequence]) -> typing.Generator:
-    """Converts the data fields into a string."""
+def _convert_model_dict_data(model: str, data: dict) -> str:
+    converted_model = model
+
+    if args := data.pop("args", None):
+        args = (f"{arg}:{value}" for arg, value in args.items())
+        converted_model = f"{model}({" ".join(args)})"
+
+    items = (_convert_model_data(_model, _data) for _model, _data in data.items())
+
+    if converted_model != model:
+        return f"{converted_model} {{{" ".join(items)}}}"
+
+    return " ".join(items)
+
+
+def _convert_model_data(model: str, data: t.Union[dict, tuple, str]) -> str:
     if isinstance(data, dict):
-        for field_name, field_value in data.items():
-            if isinstance(field_value, str):
-                yield f"{field_name} {{{field_value}}}"
-
-            elif isinstance(field_value, typing.Sequence):
-                converted_fields: str = ' '.join(_convert_sequence_to_string(field_value))
-                yield f"{field_name} {{{converted_fields}}}"
-
-            elif isinstance(field_value, dict):
-                converted_fields: str = ' '.join(_convert_fields_to_string(field_value))
-                yield f"{field_name} {{{converted_fields}}}"
-
+        return _convert_model_dict_data(model, data)
+    elif isinstance(data, tuple):
+        return _convert_model_tuple_data(model, data)
     elif isinstance(data, str):
-        yield data
+        return f"{model}{{{data}}}"
 
-    elif isinstance(data, typing.Sequence):
-        yield ' '.join(_convert_sequence_to_string(data))
-
-    else:
-        raise TypeError("fields must be of type str, dict, or typing.Sequence!")
+    raise TypeError(f"data must be of type str dict or tuple, not {type(data)}!")
 
 
-def convert_dict_to_query(query_data: typing.Union[str, dict]) -> str:
-    """
-    Convert a properly formatted dict into a graphql string.
-
-    :param query_data: A properly formatted GQL string or a dict that can be converted into a GQL string.
-    :return: A converted GQL string or the provided query string.
-    """
-    if isinstance(query_data, str):
-        return query_data
-
-    converted_query = query_data['model']
-
-    if query_name := query_data.get("name"):
-        converted_query = f"{query_name}: {converted_query}"
-
-    if query_args := query_data.get("args"):
-        converted_args: str = ' '.join(_convert_args_to_string(query_args))
-        converted_query += f"({converted_args}) "
-
-    converted_fields: str = ' '.join(_convert_fields_to_string(query_data["query"]))
-    converted_query += f"{{{converted_fields}}}"
-
-    return converted_query
+def convert_dict_to_query(query: dict) -> str:
+    converted_query = (_convert_model_data(model, data) for model, data in query.items())
+    return "\n".join(converted_query)
 
 
 def _raise_message_exception(_errors: list) -> None:
-    message: str = _errors[0]["message"]
+    message: str = _errors[0]["message"].lower()
 
     if "cannot query field" in message:
         raise errors.QueryFieldError(message)
