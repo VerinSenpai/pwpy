@@ -161,7 +161,7 @@ async def get_query(
     query: t.Union[str, dict],
     api_key: str = None,
     parser: t.Union[t.Any, None] = QueryResponse
-) -> dict:
+) -> t.Union[t.Any, dict]:
     """
     Post a GQL query, parsing for errors and returning the data.
 
@@ -187,7 +187,7 @@ async def get_query(
 
     elif data := response_data.get("data"):
         if parser is not None:
-            return QueryResponse.convert(data)
+            return parser.convert(data)
 
         return data
 
