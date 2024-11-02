@@ -1,6 +1,5 @@
 # This is part of Requiem
 # Copyright (C) 2020  Verin Senpai
-from xml.sax.handler import property_dom_node
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,18 +34,18 @@ def _str_to_datetime(date_str: str, _) -> datetime:
 
 _CONVERTER.register_structure_hook(datetime, _str_to_datetime)
 
-import json
+
+def _global_to_world(value, cls):
+    if _global := value.pop("global", None):
+        value["world"] = _global
+
+    return _CONVERTER.structure_attrs_fromdict(value, cls)
 
 
 class _BaseConverter:
 
     @classmethod
     def convert(cls, data: dict) -> typing.Any:
-        if _global := data.get("game_info", {}).get("radiation", {}).pop("global", None):
-            data["game_info"]["radiation"]["world"] = _global
-
-            # don't question it.
-
         return _CONVERTER.structure(data, cls)
 
 
@@ -451,6 +450,9 @@ class Radiation(_BaseConverter):
     north_america: float = None
     south_america: float = None
     world: float = None
+
+
+_CONVERTER.register_structure_hook(Radiation, _global_to_world)
 
 
 @attr.s(auto_attribs=True)
@@ -1161,6 +1163,7 @@ class PostType(_BaseEnum):
     ALLIANCE: int = 2
 
 
+@attr.s(auto_attribs=True)
 class EmbargoType(_BaseEnum):
     NATION_TO_NATION = "NATION_TO_NATION"
     NATION_TO_ALLIANCE = "NATION_TO_ALLIANCE"
