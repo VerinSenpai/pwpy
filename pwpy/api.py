@@ -23,7 +23,7 @@
 
 from pwpy import errors
 
-import typing
+import typing as t
 import aiohttp
 import asyncio
 import time
@@ -35,7 +35,7 @@ import json
 _LOGGER = logging.getLogger("pwpy.events")
 
 
-__all__: typing.List[str] = [
+__all__ = [
     "set_global_key",
     "convert_dict_to_query",
     "get_query",
@@ -156,7 +156,7 @@ def _raise_status_exception(status, headers) -> None:
 
 
 @_ratelimit
-async def get_query(query: typing.Union[str, dict], api_key: str = None) -> dict:
+async def get_query(query: t.Union[str, dict], api_key: str = None, parser = ) -> dict:
     """
     Post a GQL query, parsing for errors and returning the data.
 
@@ -208,7 +208,7 @@ class BulkQuery:
         self._chunk_size: int = chunk_size
 
     @property
-    def _chunk_requests(self) -> typing.Generator:
+    def _chunk_requests(self) -> t.Generator:
         """
         Splits the queries into chunks.
 
@@ -225,7 +225,7 @@ class BulkQuery:
 
             yield "\n".join(chunk)
 
-    def insert(self, query: typing.Union[dict, str]) -> None:
+    def insert(self, query: t.Union[dict, str]) -> None:
         """
         Attach a query or list of queries to the bulk query request.
 
@@ -254,16 +254,16 @@ class BulkQuery:
 
 class Listener:
 
-    def __init__(self, coro: typing.Coroutine, model: str, event: str) -> None:
-        self.coro: typing.Coroutine = coro
+    def __init__(self, coro: t.Coroutine, model: str, event: str) -> None:
+        self.coro: t.Coroutine = coro
         self.model: str = model
         self.event: str = event
-        self.channel: typing.Optional[str] = None
+        self.channel: t.Optional[str] = None
         self.active: asyncio.Event = asyncio.Event()
 
 
 class SocketMonitor:
-    def __init__(self, api_key: str, *, loop: typing.Optional[asyncio.BaseEventLoop] = None):
+    def __init__(self, api_key: str, *, loop: t.Optional[asyncio.BaseEventLoop] = None):
         if loop is None:
             loop = asyncio.get_event_loop()
 
@@ -274,13 +274,13 @@ class SocketMonitor:
                 "Missing API key! Provide an api_key to SocketMonitor directly or initialize PWPY with one."
             )
 
-        self._tasks: typing.Set[asyncio.Task] = set()
+        self._tasks: t.Set[asyncio.Task] = set()
         self._loop = loop
         self._running: bool = False
         self._closing: asyncio.Event = asyncio.Event()
-        self._session: typing.Optional[aiohttp.ClientSession] = None
-        self._socket: typing.Optional[aiohttp.ClientWebSocketResponse] = None
-        self._socket_id: typing.Optional[str] = None
+        self._session: t.Optional[aiohttp.ClientSession] = None
+        self._socket: t.Optional[aiohttp.ClientWebSocketResponse] = None
+        self._socket_id: t.Optional[str] = None
         self._connected: asyncio.Event = asyncio.Event()
         self._listening: asyncio.Event = asyncio.Event()
         self._reconnecting: bool = False
@@ -288,11 +288,11 @@ class SocketMonitor:
         self._last_msg: float = 0
         self._last_ping: float = 0
         self._last_pong: float = 0
-        self._listeners: typing.Dict[Listener] = dict()
-        self._listener: typing.Optional[asyncio.Task] = None
-        self._heartbeat: typing.Optional[asyncio.Task] = None
+        self._listeners: t.Dict[Listener] = dict()
+        self._listener: t.Optional[asyncio.Task] = None
+        self._heartbeat: t.Optional[asyncio.Task] = None
 
-    def _create_task(self, coro: typing.Coroutine):
+    def _create_task(self, coro: t.Coroutine):
         def done_callback(_):
             self._tasks.remove(task)
 
@@ -564,7 +564,7 @@ class SocketMonitor:
         await self._unsubscribe(listener.channel)
 
     def listen(self, model: str, event: str):
-        def decorator(coro: typing.Coroutine):
+        def decorator(coro: t.Coroutine):
             listener = Listener(coro, model, event)
             self._create_task(self.subscribe(listener))
 
