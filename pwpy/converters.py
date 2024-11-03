@@ -96,6 +96,7 @@ class QueryResponse(_BaseConverter):
     warattacks: "WarAttackPaginator" = None
     wars: "WarPaginator" = None
 
+
 @attr.s(auto_attribs=True)
 class ActivityStat(_BaseConverter):
     active_1_day: int = None
