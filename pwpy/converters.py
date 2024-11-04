@@ -111,7 +111,7 @@ class ActivityStat(_BaseConverter):
 
 @attr.s(auto_attribs=True)
 class ActivityStatPaginator(_BaseConverter):
-    data: ActivityStat = None
+    data: List[ActivityStat] = None
     paginatorInfo: PaginatorInfo = None
 
 
@@ -164,7 +164,7 @@ class Alliance(_BaseConverter):
 
 @attr.s(auto_attribs=True)
 class AlliancePaginator(_BaseConverter):
-    data: List["Alliance"] = None
+    data: List[Alliance] = None
     paginatorInfo: PaginatorInfo = None
 
 
@@ -198,7 +198,7 @@ class BankRecord(_BaseConverter):
 
 @attr.s(auto_attribs=True)
 class BankRecordPaginator(_BaseConverter):
-    data: List["BankRecord"] = None
+    data: List[BankRecord] = None
     paginatorInfo: PaginatorInfo = None
 
 
@@ -212,7 +212,7 @@ class BannedNation(_BaseConverter):
 
 @attr.s(auto_attribs=True)
 class BannedNationPaginator(_BaseConverter):
-    data: List["BannedNation"] = None
+    data: List[BannedNation] = None
     paginatorInfo: PaginatorInfo = None
 
 
@@ -241,7 +241,7 @@ class BaseballGame(_BaseConverter):
 
 @attr.s(auto_attribs=True)
 class BaseballGamePaginator(_BaseConverter):
-    data: List["BaseballGame"] = None
+    data: List[BaseballGame] = None
     paginatorInfo: PaginatorInfo = None
 
 
@@ -266,7 +266,7 @@ class BaseballPlayer(_BaseConverter):
 
 @attr.s(auto_attribs=True)
 class BaseballPlayerPaginator(_BaseConverter):
-    data: List["BaseballPlayer"] = None
+    data: List[BaseballPlayer] = None
     paginatorInfo: PaginatorInfo = None
 
 
@@ -296,7 +296,7 @@ class BaseballTeam(_BaseConverter):
 
 @attr.s(auto_attribs=True)
 class BaseballTeamPaginator(_BaseConverter):
-    data: List["BaseballTeam"] = None
+    data: List[BaseballTeam] = None
     paginatorInfo: PaginatorInfo = None
 
 
@@ -312,7 +312,7 @@ class Bounty(_BaseConverter):
 
 @attr.s(auto_attribs=True)
 class BountyPaginator(_BaseConverter):
-    data: List["Bounty"] = None
+    data: List[Bounty] = None
     paginatorInfo: PaginatorInfo = None
 
 
@@ -332,7 +332,7 @@ class BulletinReply(_BaseConverter):
 
 @attr.s(auto_attribs=True)
 class BulletinReplyPaginator(_BaseConverter):
-    data: List["BulletinReply"] = None
+    data: List[BulletinReply] = None
     paginatorInfo: PaginatorInfo = None
 
 
@@ -342,7 +342,7 @@ class Bulletin(_BaseConverter):
     nation_id: int = None
     nation: "Nation" = None
     alliance_id: int = None
-    alliance: "Alliance" = None
+    alliance: Alliance = None
     type: "PostType" = None
     headline: str = None
     excerpt: str = None
@@ -356,12 +356,12 @@ class Bulletin(_BaseConverter):
     date: datetime = None
     edit_date: datetime = None
     archived: bool = None
-    replies: List["BulletinReply"] = None
+    replies: List[BulletinReply] = None
 
 
 @attr.s(auto_attribs=True)
 class BulletinPaginator(_BaseConverter):
-    data: List["Bulletin"] = None
+    data: List[Bulletin] = None
     paginatorInfo: PaginatorInfo = None
 
 
@@ -407,7 +407,7 @@ class City(_BaseConverter):
 
 @attr.s(auto_attribs=True)
 class CityPaginator(_BaseConverter):
-    data: List["City"] = None
+    data: List[City] = None
     paginatorInfo: PaginatorInfo = None
 
 
@@ -416,6 +416,7 @@ class Color(_BaseConverter):
     bloc_name: str = None
     color: str = None
     turn_bonus: int = None
+
 
 @attr.s(auto_attribs=True)
 class Embargo(_BaseConverter):
@@ -431,7 +432,7 @@ class Embargo(_BaseConverter):
 
 @attr.s(auto_attribs=True)
 class EmbargoPaginator(_BaseConverter):
-    data: List["Embargo"] = None
+    data: List[Embargo] = None
     paginatorInfo: PaginatorInfo = None
 
 
@@ -498,7 +499,7 @@ class Nation(_BaseConverter):
     aircraft_casualties: int = None
     aircraft_kills: int = None
     aircraft_today: int = None
-    alliance: "Alliance" = None
+    alliance: Alliance = None
     alliance_id: int = None
     alliance_join_date: datetime = None
     alliance_position: "AlliancePosition" = None
@@ -706,7 +707,7 @@ class Nation(_BaseConverter):
 
 @attr.s(auto_attribs=True)
 class NationPaginator(_BaseConverter):
-    data: List["Nation"] = None
+    data: List[Nation] = None
     paginatorInfo: PaginatorInfo = None
 
 
@@ -761,7 +762,7 @@ class TradePrice(_BaseConverter):
 
 @attr.s(auto_attribs=True)
 class TradePricePaginator(_BaseConverter):
-    data: List["TradePrice"] = None
+    data: List[TradePrice] = None
     paginatorInfo: PaginatorInfo = None
 
 
@@ -772,8 +773,8 @@ class Trade(_BaseConverter):
     date: datetime = None
     sender_id: int = None
     receiver_id: int = None
-    sender: "Nation" = None
-    receiver: "Nation" = None
+    sender: Nation = None
+    receiver: Nation = None
     offer_resource: str = None
     offer_amount: int = None
     buy_or_sell: str = None
@@ -785,7 +786,7 @@ class Trade(_BaseConverter):
 
 @attr.s(auto_attribs=True)
 class TradePaginator(_BaseConverter):
-    data: List["Trade"] = None
+    data: List[Trade] = None
     paginatorInfo: PaginatorInfo = None
 
 
@@ -796,7 +797,7 @@ class TreasureTrade(_BaseConverter):
 
 @attr.s(auto_attribs=True)
 class TreasureTradePaginator(_BaseConverter):
-    data: List["TreasureTrade"] = None
+    data: List[TreasureTrade] = None
     paginatorInfo: PaginatorInfo = None
 
 
@@ -808,7 +809,7 @@ class Treasure(_BaseConverter):
     bonus: int = None
     spawn_date: str = None
     nation_id: int = None
-    nation: "Nation" = None
+    nation: Nation = None
 
 
 @attr.s(auto_attribs=True)
@@ -819,15 +820,15 @@ class Treaty(_BaseConverter):
     treaty_url: str = None
     turns_left: int = None
     alliance1_id: int = None
-    alliance1: "Alliance" = None
+    alliance1: Alliance = None
     alliance2_id: int = None
-    alliance2: "Alliance" = None
+    alliance2: Alliance = None
     approved: bool = None
 
 
 @attr.s(auto_attribs=True)
 class TreatyPaginator(_BaseConverter):
-    data: List["Treaty"] = None
+    data: List[Treaty] = None
     paginatorInfo: PaginatorInfo = None
 
 
@@ -836,9 +837,9 @@ class WarAttack(_BaseConverter):
     id: int = None
     date: datetime = None
     att_id: int = None
-    attacker: "Nation" = None
+    attacker: Nation = None
     def_id: int = None
-    defender: "Nation" = None
+    defender: Nation = None
     type: "AttackType" = None
     war_id: int = None
     war: "War" = None
@@ -896,7 +897,7 @@ class WarAttack(_BaseConverter):
 
 @attr.s(auto_attribs=True)
 class WarAttackPaginator(_BaseConverter):
-    data: List["WarAttack"] = None
+    data: List[WarAttack] = None
     paginatorInfo: PaginatorInfo = None
 
 
@@ -911,16 +912,16 @@ class War(_BaseConverter):
     air_superiority: int = None
     naval_blockade: int = None
     winner_id: int = None
-    attacks: List["WarAttack"] = None
+    attacks: List[WarAttack] = None
     turns_left: int = None
     att_id: int = None
     att_alliance_id: int = None
     att_alliance_position: "AlliancePosition" = None
-    attacker: "Nation" = None
+    attacker: Nation = None
     def_id: int = None
     def_alliance_id: int = None
     def_alliance_position: "AlliancePosition" = None
-    defender: "Nation" = None
+    defender: Nation = None
     att_points: int = None
     def_points: int = None
     att_peace: bool = None
@@ -958,8 +959,8 @@ class War(_BaseConverter):
 
 
 @attr.s(auto_attribs=True)
-class  WarPaginator(_BaseConverter):
-    data: List["War"] = None
+class WarPaginator(_BaseConverter):
+    data: List[War] = None
     paginatorInfo: PaginatorInfo = None
 
 
@@ -1116,11 +1117,11 @@ class CityInfraDamage(_BaseConverter):
 class TaxBracket(_BaseConverter):
     id: int = None
     alliance_id: int = None
-    alliance: "Alliance" = None
+    alliance: Alliance = None
     date: datetime = None
     date_modified: datetime = None
     last_modifier_id: int = None
-    last_modifier: "Nation" = None
+    last_modifier: Nation = None
     tax_rate: int = None
     resource_tax_rate: int = None
     bracket_name: str = None
