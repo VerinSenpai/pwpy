@@ -79,48 +79,62 @@ def _ratelimit(func):
     return wrapper
 
 
-def _convert_model_tuple_data(model: str, data: tuple) -> str:
-    items = []
+def _parse_model_data_tuple(data: tuple):
+    values = []
 
     for item in data:
         if isinstance(item, dict):
-            items.append(_convert_model_data("", item))
+            values.append(_parse_model_data_dict(item))
 
         elif isinstance(item, str):
-            items.append(item)
+            values.append(item)
 
-    return f"{model}{{{" ".join(items)}}}"
-
-
-def _convert_model_dict_data(model: str, data: dict) -> str:
-    converted_model = model
-
-    if args := data.pop("args", None):
-        args = (f"{arg}:{value}" for arg, value in args.items())
-        converted_model = f"{model}({" ".join(args)})"
-
-    items = (_convert_model_data(_model, _data) for _model, _data in data.items())
-
-    if converted_model != model:
-        return f"{converted_model} {{{" ".join(items)}}}"
-
-    return " ".join(items)
+    return " ".join(values)
 
 
-def _convert_model_data(model: str, data: t.Union[dict, tuple, str]) -> str:
+def _parse_model_data_dict(data: dict):
+    values = []
+
+    for key, value in data.items():
+        if isinstance(value, str):
+            values.append(f"{key}{{{value}}}")
+
+        elif isinstance(value, dict):
+            _data = _parse_model_data_dict(value)
+            values.append(f"{key}{{{_data}}}")
+
+        elif isinstance(value, tuple):
+            _data = _parse_model_data_tuple(value)
+            values.append(f"{key}{{{_data}}}")
+
+    return " ".join(values)
+
+
+def _parse_model_data(data: t.Union[dict, tuple, str]):
     if isinstance(data, dict):
-        return _convert_model_dict_data(model, data)
+        return _parse_model_data_dict(data)
+
     elif isinstance(data, tuple):
-        return _convert_model_tuple_data(model, data)
+        return _parse_model_data_tuple(data)
+
     elif isinstance(data, str):
-        return f"{model}{{{data}}}"
+        return data
 
     raise TypeError(f"data must be of type str dict or tuple, not {type(data)}!")
 
 
-def convert_dict_to_query(query: dict) -> str:
-    converted_query = (_convert_model_data(model, data) for model, data in query.items())
-    return "\n".join(converted_query)
+def convert_dict_to_query(query: dict):
+    sections = []
+
+    for model, data in query.items():
+        if isinstance(data, dict):
+            if args := data.pop("args", None):
+                model = f"{model}({" ".join(f"{key}:{value}" for key, value in args.items())})"
+
+        model_data = _parse_model_data(data)
+        sections.append(f"{model}{{{model_data}}}")
+        
+    return "\n".join(sections)
 
 
 def _raise_message_exception(_errors: list) -> None:
