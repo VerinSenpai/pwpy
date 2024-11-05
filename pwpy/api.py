@@ -92,7 +92,7 @@ def _parse_model_data_tuple(data: tuple):
     return " ".join(values)
 
 
-def _parse_model_data_dict(data: dict):
+def _parse_model_data_dict(data: dict) -> str:
     values = []
 
     for key, value in data.items():
@@ -110,7 +110,7 @@ def _parse_model_data_dict(data: dict):
     return " ".join(values)
 
 
-def _parse_model_data(data: t.Union[dict, tuple, str]):
+def _parse_model_data(data: t.Union[dict, tuple, str]) -> t.Union[dict, tuple, str]:
     if isinstance(data, dict):
         return _parse_model_data_dict(data)
 
@@ -123,7 +123,7 @@ def _parse_model_data(data: t.Union[dict, tuple, str]):
     raise TypeError(f"data must be of type str dict or tuple, not {type(data)}!")
 
 
-def convert_dict_to_query(query: dict):
+def convert_dict_to_query(query: dict) -> str:
     sections = []
 
     for model, data in query.items():
@@ -131,8 +131,7 @@ def convert_dict_to_query(query: dict):
             if args := data.pop("args", None):
                 model = f"{model}({" ".join(f"{key}:{value}" for key, value in args.items())})"
 
-        model_data = _parse_model_data(data)
-        sections.append(f"{model}{{{model_data}}}")
+        sections.append(f"{model}{{{_parse_model_data(data)}}}")
         
     return "\n".join(sections)
 
@@ -171,17 +170,12 @@ def _raise_status_exception(status, headers) -> None:
 
 
 @_ratelimit
-async def get_query(
-    query: t.Union[str, dict],
-    api_key: str = None,
-    parser: t.Union[t.Any, None] = QueryResponse
-) -> t.Union[t.Any, dict]:
+async def get_query(query: t.Union[str, dict], api_key: str = None) -> t.Union[t.Any, dict]:
     """
     Post a GQL query, parsing for errors and returning the data.
 
     :param query: A properly formatted GQL string or a dict that can be converted into a GQL string.
     :param api_key: A valid Politics And War API key.
-    :param parser
     :return: API response data.
     """
     api_key = api_key or _API_KEY
@@ -200,9 +194,6 @@ async def get_query(
         _raise_message_exception(_errors)
 
     elif data := response_data.get("data"):
-        if parser is not None:
-            return parser.convert(data)
-
         return data
 
     raise errors.ResponseFormatError(str(response_data))
@@ -256,9 +247,12 @@ class BulkQuery:
         self._queries.add(convert_dict_to_query(query))
 
     def clear(self) -> None:
+        """
+        Clear all queries from BulkQuery. Useful if you need to reuse the object for a different query set.
+        """
         self._queries.clear()
 
-    async def get(self, parser: t.Union[QueryResponse, None] = None) -> t.Generator:
+    async def get(self) -> t.Generator:
         """
         Post the bulk GQL query, parsing for errors and returning the data.
 
@@ -268,7 +262,7 @@ class BulkQuery:
 
         async with asyncio.TaskGroup() as tg:
             for chunk in self._chunk_requests:
-                tasks.append(tg.create_task(get_query(chunk, self._api_key, parser)))
+                tasks.append(tg.create_task(get_query(chunk, self._api_key)))
 
         return (task.result() for task in tasks)
 
