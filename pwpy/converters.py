@@ -35,13 +35,6 @@ def _str_to_datetime(date_str: str, _) -> datetime:
 _CONVERTER.register_structure_hook(datetime, _str_to_datetime)
 
 
-def _global_to_world(value, cls):
-    if _global := value.pop("global", None):
-        value["world"] = _global
-
-    return _CONVERTER.structure_attrs_fromdict(value, cls)
-
-
 class _BaseConverter:
 
     @classmethod
@@ -452,6 +445,13 @@ class Radiation(_BaseConverter):
     north_america: float = None
     south_america: float = None
     world: float = None
+
+
+def _global_to_world(value, cls):
+    if _global := value.pop("global", None):
+        value["world"] = _global
+
+    return _CONVERTER.structure_attrs_fromdict(value, cls)
 
 
 _CONVERTER.register_structure_hook(Radiation, _global_to_world)
