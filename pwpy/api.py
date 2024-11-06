@@ -170,18 +170,12 @@ def _raise_status_exception(status, headers) -> None:
 
 
 @_ratelimit
-async def get_query(
-    query: t.Union[str, dict],
-    api_key: str = None,
-    converter: t.Any = QueryResponse
-) -> t.Union[t.Any, dict]:
+async def get_query(query: t.Union[str, dict], api_key: str = None) -> t.Union[t.Any, dict]:
     """
     Post a GQL query, parsing for errors and returning the data.
 
     :param query: A properly formatted GQL string or a dict that can be converted into a GQL string.
     :param api_key: A valid Politics And War API key.
-    :param converter: Converter to parse the response with. Passing `None` will return the raw response.
-                      Must have a `convert` method the raw data as a positional argument.
 
     :return: API response data.
     """
@@ -201,9 +195,6 @@ async def get_query(
         _raise_message_exception(_errors)
 
     elif data := response_data.get("data"):
-        if converter is not None:
-            return converter.convert(data)
-
         return data
 
     raise errors.ResponseFormatError(str(response_data))
@@ -272,7 +263,7 @@ class BulkQuery:
 
         async with asyncio.TaskGroup() as tg:
             for chunk in self._chunk_requests:
-                tasks.append(tg.create_task(get_query(chunk, self._api_key, None)))
+                tasks.append(tg.create_task(get_query(chunk, self._api_key)))
 
         return (task.result() for task in tasks)
 
