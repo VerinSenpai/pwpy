@@ -21,11 +21,12 @@ from pwpy import urls, errors, utils
 from enum import Enum
 from datetime import datetime
 
-import typing
+import typing as t
 import attr
 
 
 _CONVERTER = Converter()
+T = t.TypeVar("T")
 
 
 def _str_to_datetime(date_str: str, _) -> datetime:
@@ -38,7 +39,7 @@ _CONVERTER.register_structure_hook(datetime, _str_to_datetime)
 class _BaseConverter:
 
     @classmethod
-    def convert(cls, data: dict) -> typing.Any:
+    def convert(cls, data: dict) -> t.Any:
         return _CONVERTER.structure(data, cls)
 
 
@@ -46,6 +47,40 @@ class _BaseEnum(Enum):
 
     def __str__(self) -> str:
         return str(self.value).replace("_", " ").title()
+
+
+@attr.s(auto_attribs=True)
+class Paginator(_BaseConverter, t.Generic[T]):
+    data: List[T] = None
+    paginatorInfo: "PaginatorInfo" = None
+
+    def __iter__(self):
+        if self.data is None:
+            raise errors.ModelMissingField("data")
+
+        return iter(self.data)
+
+    def __getitem__(self, index):
+        if self.data is None:
+            raise errors.ModelMissingField("data")
+
+        return self.data[index]
+
+    def __len__(self):
+        if self.data is None:
+            raise errors.ModelMissingField("data")
+
+        return len(self.data)
+
+
+def paginator_structure_hook(raw_data: dict, cl: t.Type[Paginator[T]]):
+    if items := raw_data.get("data"):
+        items = [_CONVERTER.structure(item, cl.__args__[0]) for item in items]
+
+    if pg_info := raw_data.get("paginatorInfo"):
+        pg_info = _CONVERTER.structure(pg_info, PaginatorInfo)
+
+    return Paginator(data=items, paginatorInfo=pg_info)
 
 
 @attr.s(auto_attribs=True)
@@ -60,34 +95,37 @@ class PaginatorInfo(_BaseConverter):
     total: int = None
 
 
+_CONVERTER.register_structure_hook(Paginator, paginator_structure_hook)
+
+
 @attr.s(auto_attribs=True)
 class QueryResponse(_BaseConverter):
-    activity_stats: "ActivityStatPaginator" = None
-    alliances: "AlliancePaginator" = None
-    bankrecs: "BankRecordPaginator" = None
-    banned_nations: "BannedNationPaginator" = None
-    baseball_games: "BaseballGamePaginator" = None
-    baseball_players: "BaseballPlayerPaginator" = None
-    baseball_teams: "BaseballTeamPaginator" = None
-    bounties: "BountyPaginator" = None
-    bulletin_replies: "BulletinReplyPaginator" = None
-    bulletins: "BulletinPaginator" = None
-    cities: "CityPaginator" = None
+    activity_stats: Paginator["ActivityStat"] = None
+    alliances: Paginator["Alliance"] = None
+    bankrecs: Paginator["BankRecord"] = None
+    banned_nations: Paginator["BannedNation"] = None
+    baseball_games: Paginator["BaseballGame"] = None
+    baseball_players: Paginator["BaseballPlayer"] = None
+    baseball_teams: Paginator["BaseballTeam"] = None
+    bounties: Paginator["Bounty"] = None
+    bulletin_replies: Paginator["BulletinReply"] = None
+    bulletins: Paginator["Bulletin"] = None
+    cities: Paginator["City"] = None
     colors: List["Color"] = None
-    embargoes: "EmbargoPaginator" = None
+    embargoes: Paginator["Embargo"] = None
     game_info: "GameInfo" = None
     me: "Me" = None
     nation_resource_stats: "ResourceStat" = None
-    nations: "NationPaginator" = None
+    nations: Paginator["Nation"] = None
     resource_stats: List["ResourceStat"] = None
     top_trade_info: "TopTradeInfo" = None
-    trade_prices: "TradePricePaginator" = None
-    trades: "TradePaginator" = None
-    treasure_trades: "TreasureTradePaginator" = None
+    trade_prices: Paginator["TradePrice"] = None
+    trades: Paginator["Trade"] = None
+    treasure_trades: Paginator["TreasureTrade"] = None
     treasures: List["Treasure"] = None
-    treaties: "TreatyPaginator" = None
-    warattacks: "WarAttackPaginator" = None
-    wars: "WarPaginator" = None
+    treaties: Paginator["Treaty"] = None
+    warattacks: Paginator["WarAttack"] = None
+    wars: Paginator["War"] = None
 
 
 @attr.s(auto_attribs=True)
@@ -100,12 +138,6 @@ class ActivityStat(_BaseConverter):
     date: datetime = None
     nations_created: int = None
     total_nations: int = None
-
-
-@attr.s(auto_attribs=True)
-class ActivityStatPaginator(_BaseConverter):
-    data: List[ActivityStat] = None
-    paginatorInfo: PaginatorInfo = None
 
 
 @attr.s(auto_attribs=True)
@@ -156,12 +188,6 @@ class Alliance(_BaseConverter):
 
 
 @attr.s(auto_attribs=True)
-class AlliancePaginator(_BaseConverter):
-    data: List[Alliance] = None
-    paginatorInfo: PaginatorInfo = None
-
-
-@attr.s(auto_attribs=True)
 class BankRecord(_BaseConverter):
     id: int = None
     date: datetime = None
@@ -190,23 +216,11 @@ class BankRecord(_BaseConverter):
 
 
 @attr.s(auto_attribs=True)
-class BankRecordPaginator(_BaseConverter):
-    data: List[BankRecord] = None
-    paginatorInfo: PaginatorInfo = None
-
-
-@attr.s(auto_attribs=True)
 class BannedNation(_BaseConverter):
     date: datetime = None
     days_left: int = None
     nation_id: int = None
     reason: str = None
-
-
-@attr.s(auto_attribs=True)
-class BannedNationPaginator(_BaseConverter):
-    data: List[BannedNation] = None
-    paginatorInfo: PaginatorInfo = None
 
 
 @attr.s(auto_attribs=True)
@@ -233,12 +247,6 @@ class BaseballGame(_BaseConverter):
 
 
 @attr.s(auto_attribs=True)
-class BaseballGamePaginator(_BaseConverter):
-    data: List[BaseballGame] = None
-    paginatorInfo: PaginatorInfo = None
-
-
-@attr.s(auto_attribs=True)
 class BaseballPlayer(_BaseConverter):
     id: int = None
     date: datetime = None
@@ -255,12 +263,6 @@ class BaseballPlayer(_BaseConverter):
     awareness: float = None
     overall: float = None
     birthday: int = None
-
-
-@attr.s(auto_attribs=True)
-class BaseballPlayerPaginator(_BaseConverter):
-    data: List[BaseballPlayer] = None
-    paginatorInfo: PaginatorInfo = None
 
 
 @attr.s(auto_attribs=True)
@@ -288,12 +290,6 @@ class BaseballTeam(_BaseConverter):
 
 
 @attr.s(auto_attribs=True)
-class BaseballTeamPaginator(_BaseConverter):
-    data: List[BaseballTeam] = None
-    paginatorInfo: PaginatorInfo = None
-
-
-@attr.s(auto_attribs=True)
 class Bounty(_BaseConverter):
     id: int = None
     date: datetime = None
@@ -301,12 +297,6 @@ class Bounty(_BaseConverter):
     nation: "Nation" = None
     amount: int = None
     type: "BountyType" = None
-
-
-@attr.s(auto_attribs=True)
-class BountyPaginator(_BaseConverter):
-    data: List[Bounty] = None
-    paginatorInfo: PaginatorInfo = None
 
 
 @attr.s(auto_attribs=True)
@@ -321,12 +311,6 @@ class BulletinReply(_BaseConverter):
     nation_name: str = None
     leader_name: str = None
     like_count: int = None
-
-
-@attr.s(auto_attribs=True)
-class BulletinReplyPaginator(_BaseConverter):
-    data: List[BulletinReply] = None
-    paginatorInfo: PaginatorInfo = None
 
 
 @attr.s(auto_attribs=True)
@@ -350,12 +334,6 @@ class Bulletin(_BaseConverter):
     edit_date: datetime = None
     archived: bool = None
     replies: List[BulletinReply] = None
-
-
-@attr.s(auto_attribs=True)
-class BulletinPaginator(_BaseConverter):
-    data: List[Bulletin] = None
-    paginatorInfo: PaginatorInfo = None
 
 
 @attr.s(auto_attribs=True)
@@ -399,12 +377,6 @@ class City(_BaseConverter):
 
 
 @attr.s(auto_attribs=True)
-class CityPaginator(_BaseConverter):
-    data: List[City] = None
-    paginatorInfo: PaginatorInfo = None
-
-
-@attr.s(auto_attribs=True)
 class Color(_BaseConverter):
     bloc_name: str = None
     color: str = None
@@ -421,12 +393,6 @@ class Embargo(_BaseConverter):
     sender: "Nation" = None
     sender_id: int = None
     type: "EmbargoType" = None
-
-
-@attr.s(auto_attribs=True)
-class EmbargoPaginator(_BaseConverter):
-    data: List[Embargo] = None
-    paginatorInfo: PaginatorInfo = None
 
 
 @attr.s(auto_attribs=True)
@@ -706,12 +672,6 @@ class Nation(_BaseConverter):
 
 
 @attr.s(auto_attribs=True)
-class NationPaginator(_BaseConverter):
-    data: List[Nation] = None
-    paginatorInfo: PaginatorInfo = None
-
-
-@attr.s(auto_attribs=True)
 class ResourceStat(_BaseConverter):
     aluminum: str = None
     bauxite: str = None
@@ -761,12 +721,6 @@ class TradePrice(_BaseConverter):
 
 
 @attr.s(auto_attribs=True)
-class TradePricePaginator(_BaseConverter):
-    data: List[TradePrice] = None
-    paginatorInfo: PaginatorInfo = None
-
-
-@attr.s(auto_attribs=True)
 class Trade(_BaseConverter):
     id: int = None
     type: "TradeType" = None
@@ -785,20 +739,8 @@ class Trade(_BaseConverter):
 
 
 @attr.s(auto_attribs=True)
-class TradePaginator(_BaseConverter):
-    data: List[Trade] = None
-    paginatorInfo: PaginatorInfo = None
-
-
-@attr.s(auto_attribs=True)
 class TreasureTrade(_BaseConverter):
     ...
-
-
-@attr.s(auto_attribs=True)
-class TreasureTradePaginator(_BaseConverter):
-    data: List[TreasureTrade] = None
-    paginatorInfo: PaginatorInfo = None
 
 
 @attr.s(auto_attribs=True)
@@ -824,12 +766,6 @@ class Treaty(_BaseConverter):
     alliance2_id: int = None
     alliance2: Alliance = None
     approved: bool = None
-
-
-@attr.s(auto_attribs=True)
-class TreatyPaginator(_BaseConverter):
-    data: List[Treaty] = None
-    paginatorInfo: PaginatorInfo = None
 
 
 @attr.s(auto_attribs=True)
@@ -896,12 +832,6 @@ class WarAttack(_BaseConverter):
 
 
 @attr.s(auto_attribs=True)
-class WarAttackPaginator(_BaseConverter):
-    data: List[WarAttack] = None
-    paginatorInfo: PaginatorInfo = None
-
-
-@attr.s(auto_attribs=True)
 class War(_BaseConverter):
     id: int = None
     date: datetime = None
@@ -956,12 +886,6 @@ class War(_BaseConverter):
     def_nukes_used: int = None
     att_infra_destroyed_value: float = None
     def_infra_destroyed_value: float = None
-
-
-@attr.s(auto_attribs=True)
-class WarPaginator(_BaseConverter):
-    data: List[War] = None
-    paginatorInfo: PaginatorInfo = None
 
 
 @attr.s(auto_attribs=True)
