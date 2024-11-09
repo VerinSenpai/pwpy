@@ -16,7 +16,6 @@
 
 
 from cattr import Converter
-from typing import List
 from pwpy import urls, errors, utils
 from enum import Enum
 from datetime import datetime
@@ -51,7 +50,7 @@ class _BaseEnum(Enum):
 
 @attr.s(auto_attribs=True)
 class Paginator(_BaseConverter, t.Generic[T]):
-    data: List[T] = None
+    data: t.List[T] = None
     paginatorInfo: "PaginatorInfo" = None
 
     def __iter__(self):
@@ -73,7 +72,7 @@ class Paginator(_BaseConverter, t.Generic[T]):
         return len(self.data)
 
 
-def paginator_structure_hook(raw_data: dict, cl: t.Type[Paginator[T]]):
+def paginator_hook(raw_data: dict, cl: t.Type[Paginator[T]]) -> Paginator:
     if items := raw_data.get("data"):
         items = [_CONVERTER.structure(item, cl.__args__[0]) for item in items]
 
@@ -95,7 +94,7 @@ class PaginatorInfo(_BaseConverter):
     total: int = None
 
 
-_CONVERTER.register_structure_hook(Paginator, paginator_structure_hook)
+_CONVERTER.register_structure_hook(Paginator, paginator_hook)
 
 
 @attr.s(auto_attribs=True)
@@ -111,18 +110,18 @@ class QueryResponse(_BaseConverter):
     bulletin_replies: Paginator["BulletinReply"] = None
     bulletins: Paginator["Bulletin"] = None
     cities: Paginator["City"] = None
-    colors: List["Color"] = None
+    colors: t.List["Color"] = None
     embargoes: Paginator["Embargo"] = None
     game_info: "GameInfo" = None
     me: "Me" = None
     nation_resource_stats: "ResourceStat" = None
     nations: Paginator["Nation"] = None
-    resource_stats: List["ResourceStat"] = None
+    resource_stats: t.List["ResourceStat"] = None
     top_trade_info: "TopTradeInfo" = None
     trade_prices: Paginator["TradePrice"] = None
     trades: Paginator["Trade"] = None
     treasure_trades: Paginator["TreasureTrade"] = None
-    treasures: List["Treasure"] = None
+    treasures: t.List["Treasure"] = None
     treaties: Paginator["Treaty"] = None
     warattacks: Paginator["WarAttack"] = None
     wars: Paginator["War"] = None
@@ -144,13 +143,13 @@ class ActivityStat(_BaseConverter):
 class Alliance(_BaseConverter):
     accept_members: bool = None
     acronym: str = None
-    alliance_positions: List["AlliancePositionInfo"] = None
+    alliance_positions: t.List["AlliancePositionInfo"] = None
     aluminum: float = None
     average_score: float = None
-    awards: List["Award"] = None
-    bankrecs: List["BankRecord"] = None
+    awards: t.List["Award"] = None
+    bankrecs: t.List["BankRecord"] = None
     bauxite: float = None
-    bulletins: List["Bulletin"] = None
+    bulletins: t.List["Bulletin"] = None
     coal: float = None
     color: str = None
     date: datetime = None
@@ -165,18 +164,18 @@ class Alliance(_BaseConverter):
     money: float = None
     munitions: float = None
     name: str = None
-    nations: List["Nation"] = None
+    nations: t.List["Nation"] = None
     oil: float = None
     rank: int = None
-    received_treaties: List["Treaty"] = None
+    received_treaties: t.List["Treaty"] = None
     score: float = None
-    sent_treaties: List["Treaty"] = None
+    sent_treaties: t.List["Treaty"] = None
     steel: float = None
-    tax_brackets: List["TaxBracket"] = None
-    taxrecs: List["BankRecord"] = None
-    treaties: List["Treaty"] = None
+    tax_brackets: t.List["TaxBracket"] = None
+    taxrecs: t.List["BankRecord"] = None
+    treaties: t.List["Treaty"] = None
     uranium: float = None
-    wars: List["War"] = None
+    wars: t.List["War"] = None
     wiki_link: str = None
 
     @property
@@ -319,7 +318,7 @@ class Bulletin(_BaseConverter):
     nation_id: int = None
     nation: "Nation" = None
     alliance_id: int = None
-    alliance: Alliance = None
+    alliance: t.Optional[Alliance] = None
     type: "PostType" = None
     headline: str = None
     excerpt: str = None
@@ -333,7 +332,7 @@ class Bulletin(_BaseConverter):
     date: datetime = None
     edit_date: datetime = None
     archived: bool = None
-    replies: List[BulletinReply] = None
+    replies: t.List[BulletinReply] = None
 
 
 @attr.s(auto_attribs=True)
@@ -435,7 +434,7 @@ class Me(_BaseConverter):
 
 @attr.s(auto_attribs=True)
 class APIKeyPermissions(_BaseConverter):
-    alliance_accept_applicants: bool = None 
+    alliance_accept_applicants: bool = None
     alliance_change_permissions: bool = None
     alliance_manage_treaties: bool = None
     alliance_promote_self_to_leader: bool = None
@@ -465,7 +464,7 @@ class Nation(_BaseConverter):
     aircraft_casualties: int = None
     aircraft_kills: int = None
     aircraft_today: int = None
-    alliance: Alliance = None
+    alliance: t.Optional[Alliance] = None
     alliance_id: int = None
     alliance_join_date: datetime = None
     alliance_position: "AlliancePosition" = None
@@ -475,19 +474,19 @@ class Nation(_BaseConverter):
     aluminum: float = None
     arable_land_agency: bool = None
     arms_stockpile: bool = None
-    awards: List["Award"] = None
-    bankrecs: List[BankRecord] = None
+    awards: t.List["Award"] = None
+    bankrecs: t.List[BankRecord] = None
     baseball_team: BaseballTeam = None
     bauxite: float = None
     bauxite_works: bool = None
     beige_turns: int = None
-    bounties: List[Bounty] = None
-    bulletin_replies: List[BulletinReply] = None
-    bulletins: List[Bulletin] = None
+    bounties: t.List[Bounty] = None
+    bulletin_replies: t.List[BulletinReply] = None
+    bulletins: t.List[Bulletin] = None
     bureau_of_domestic_affairs: bool = None
     center_for_civil_engineering: bool = None
     central_intelligence_agency: bool = None
-    cities: List[City] = None
+    cities: t.List[City] = None
     clinical_research_center: bool = None
     coal: float = None
     color: str = None
@@ -499,7 +498,7 @@ class Nation(_BaseConverter):
     defensive_wars_count: int = None
     denouncements: int = None
     discord: str = None
-    discord_id: int = None
+    discord_id: t.Optional[int] = None
     domestic_policy: "DomesticPolicy" = None
     domestic_policy_turns: int = None
     economic_policy: "EconomicPolicy" = None
@@ -553,12 +552,12 @@ class Nation(_BaseConverter):
     project_bits: str = None
     projects: int = None
     propaganda_bureau: bool = None
-    received_bankrecs: List[BankRecord] = None
+    received_bankrecs: t.List[BankRecord] = None
     recycling_initiative: bool = None
     research_and_development_center: bool = None
     resource_production_center: bool = None
     score: float = None
-    sent_bankrecs: List[BankRecord] = None
+    sent_bankrecs: t.List[BankRecord] = None
     ship_casualties: int = None
     ship_kills: int = None
     ships: int = None
@@ -583,12 +582,12 @@ class Nation(_BaseConverter):
     tanks: int = None
     tanks_today: int = None
     tax_id: int = None
-    taxrecs: List[BankRecord] = None
+    taxrecs: t.List[BankRecord] = None
     telecommunications_satellite: bool = None
     total_infrastructure_destroyed: float = None
     total_infrastructure_lost: float = None
-    trades: List["Trade"] = None
-    treasures: List["Treasure"] = None
+    trades: t.List["Trade"] = None
+    treasures: t.List["Treasure"] = None
     turns_since_last_city: int = None
     turns_since_last_project: int = None
     update_tz: float = None
@@ -600,7 +599,7 @@ class Nation(_BaseConverter):
     vital_defense_system: bool = None
     war_policy: "WarPolicy" = None
     war_policy_turns: int = None
-    wars: List["War"] = None
+    wars: t.List["War"] = None
     wars_lost: int = None
     wars_won: int = None
 
@@ -691,7 +690,7 @@ class ResourceStat(_BaseConverter):
 @attr.s(auto_attribs=True)
 class TopTradeInfo(_BaseConverter):
     market_index: int = None
-    resources: List["TopTradeResourcesInfo"] = None
+    resources: t.List["TopTradeResourcesInfo"] = None
 
 
 @attr.s(auto_attribs=True)
@@ -775,9 +774,9 @@ class Treaty(_BaseConverter):
     treaty_url: str = None
     turns_left: int = None
     alliance1_id: int = None
-    alliance1: Alliance = None
+    alliance1: t.Optional[Alliance] = None
     alliance2_id: int = None
-    alliance2: Alliance = None
+    alliance2: t.Optional[Alliance] = None
     approved: bool = None
 
 
@@ -855,7 +854,7 @@ class War(_BaseConverter):
     air_superiority: int = None
     naval_blockade: int = None
     winner_id: int = None
-    attacks: List[WarAttack] = None
+    attacks: t.List[WarAttack] = None
     turns_left: int = None
     att_id: int = None
     att_alliance_id: int = None
@@ -1054,7 +1053,7 @@ class CityInfraDamage(_BaseConverter):
 class TaxBracket(_BaseConverter):
     id: int = None
     alliance_id: int = None
-    alliance: Alliance = None
+    alliance: t.Optional[Alliance] = None
     date: datetime = None
     date_modified: datetime = None
     last_modifier_id: int = None
