@@ -27,7 +27,7 @@ __all__ = [
     "utils",
     "urls",
     "scrape",
-    "converters",
+    "types.py",
     "set_global_key",
     "convert_dict_to_query",
     "get_query",
@@ -104,14 +104,14 @@ __all__ = [
 from pwpy import api
 from pwpy import errors
 from pwpy import utils
-from pwpy import converters
+from pwpy import types
 from pwpy import scrape
 from pwpy import urls
 
 from pwpy.api import *
 from pwpy.errors import *
 from pwpy.utils import *
-from pwpy.converters import *
+from pwpy.types import *
 from pwpy.scrape import *
 from pwpy.urls import *
 
