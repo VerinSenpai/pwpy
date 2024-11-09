@@ -22,7 +22,7 @@
 
 
 from pwpy import errors
-from pwpy.converters import QueryResponse, PaginatorInfo
+from pwpy.types import QueryResponse, PaginatorInfo
 
 import typing as t
 import aiohttp
@@ -124,6 +124,9 @@ def _parse_model_data(data: t.Union[dict, tuple, str]) -> t.Union[dict, tuple, s
 
 
 def convert_dict_to_query(query: dict) -> str:
+    if isinstance(query, str):
+        return query
+
     sections = []
 
     for model, data in query.items():
@@ -171,10 +174,10 @@ def _raise_status_exception(status, headers) -> None:
 
 @_ratelimit
 async def get_query(
-    query: t.Union[str, dict],
+    query: t.Union[str, dict], *,
     api_key: str = None,
     parse_query: bool = False,
-    *, converter=QueryResponse
+    converter=QueryResponse
 ) -> t.Union[t.Any, dict]:
     """
     Post a GQL query, parsing for errors and returning the data.
@@ -273,7 +276,7 @@ class BulkQuery:
 
         async with asyncio.TaskGroup() as tg:
             for chunk in self._chunk_requests:
-                tasks.append(tg.create_task(get_query(chunk, self._api_key)))
+                tasks.append(tg.create_task(get_query(chunk, api_key=self._api_key)))
 
         return (task.result() for task in tasks)
 
