@@ -170,12 +170,19 @@ def _raise_status_exception(status, headers) -> None:
 
 
 @_ratelimit
-async def get_query(query: t.Union[str, dict], api_key: str = None) -> t.Union[t.Any, dict]:
+async def get_query(
+    query: t.Union[str, dict],
+    api_key: str = None,
+    parse_query: bool = False,
+    *, converter=QueryResponse
+) -> t.Union[t.Any, dict]:
     """
     Post a GQL query, parsing for errors and returning the data.
 
     :param query: A properly formatted GQL string or a dict that can be converted into a GQL string.
     :param api_key: A valid Politics And War API key.
+    :param parse_query: Whether to convert the response.
+    :param converter: Type to convert response to. Defaults to `pwpy.converters.QueryResponse`.
 
     :return: API response data.
     """
@@ -195,6 +202,9 @@ async def get_query(query: t.Union[str, dict], api_key: str = None) -> t.Union[t
         _raise_message_exception(_errors)
 
     elif data := response_data.get("data"):
+        if parse_query:
+            return converter.convert(data)
+
         return data
 
     raise errors.ResponseFormatError(str(response_data))
@@ -304,7 +314,7 @@ class SocketMonitor:
         self._last_msg: float = 0
         self._last_ping: float = 0
         self._last_pong: float = 0
-        self._listeners: t.Dict[Listener] = dict()
+        self._listeners: t.Dict[str] = dict()
         self._listener: t.Optional[asyncio.Task] = None
         self._heartbeat: t.Optional[asyncio.Task] = None
 
