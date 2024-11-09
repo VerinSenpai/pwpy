@@ -740,7 +740,20 @@ class Trade(_BaseConverter):
 
 @attr.s(auto_attribs=True)
 class TreasureTrade(_BaseConverter):
-    ...
+    accept_date: datetime = None
+    accepted: bool = None
+    buying: bool = None
+    id: int = None
+    money: int = None
+    offer_date: datetime = None
+    receiver: Nation = None
+    receiver_id: int = None
+    rejected: bool = None
+    seller_cancelled: bool = None
+    selling: bool = None
+    sender: Nation = None
+    sender_id: int = None
+    treasure: str = None
 
 
 @attr.s(auto_attribs=True)
