@@ -176,7 +176,8 @@ def _raise_status_exception(status, headers) -> None:
 async def get_query(
     query: t.Union[str, dict], *,
     api_key: str = None,
-    parse_query: bool = False,
+    depth: t.Iterable = (),
+    parse: bool = False,
     converter=QueryResponse
 ) -> t.Union[t.Any, dict]:
     """
@@ -184,7 +185,8 @@ async def get_query(
 
     :param query: A properly formatted GQL string or a dict that can be converted into a GQL string.
     :param api_key: A valid Politics And War API key.
-    :param parse_query: Whether to convert the response.
+    :param depth: A list of keys and indexes to traverse down the data tree.
+    :param parse: Whether to convert the response or return the raw dict. Defaults to `False`.
     :param converter: Type to convert response to. Defaults to `pwpy.converters.QueryResponse`.
 
     :return: API response data.
@@ -205,7 +207,10 @@ async def get_query(
         _raise_message_exception(_errors)
 
     elif data := response_data.get("data"):
-        if parse_query:
+        for key in depth:
+            data = data[key]
+
+        if parse:
             return converter.convert(data)
 
         return data
