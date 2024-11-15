@@ -24,6 +24,58 @@ import typing as t
 import attr
 
 
+__all__ = [
+    "_BaseConverter",
+    "PaginatorInfo",
+    "QueryResponse",
+    "ActivityStat",
+    "Alliance",
+    "BankRecord",
+    "BannedNation",
+    "BaseballGame",
+    "BaseballPlayer",
+    "BaseballTeam",
+    "Bounty",
+    "Bulletin",
+    "BulletinReply",
+    "City",
+    "Color",
+    "Embargo",
+    "EmbargoType",
+    "GameInfo",
+    "Radiation",
+    "Me",
+    "APIKeyPermissions",
+    "Nation",
+    "ResourceStat",
+    "AlliancePositionInfo",
+    "TopTradeResourcesInfo",
+    "TopTradeInfo",
+    "TradePrice",
+    "Trade",
+    "TreasureTrade",
+    "Treasure",
+    "Treaty",
+    "WarAttack",
+    "War",
+    "AttackType",
+    "WarType",
+    "WarPolicy",
+    "DomesticPolicy",
+    "SocialPolicy",
+    "EconomicPolicy",
+    "TradeType",
+    "BountyType",
+    "AlliancePosition",
+    "GovernmentType",
+    "Award",
+    "TaxBracket",
+    "CityInfraDamage",
+    "PostType",
+    "Paginator"
+]
+
+
 _CONVERTER = Converter()
 T = t.TypeVar("T")
 
@@ -72,7 +124,7 @@ class Paginator(_BaseConverter, t.Generic[T]):
         return len(self.data)
 
 
-def paginator_hook(raw_data: dict, cl: t.Type[Paginator[T]]) -> Paginator:
+def _paginator_hook(raw_data: dict, cl: t.Type[Paginator[T]]) -> Paginator:
     if items := raw_data.get("data"):
         items = [_CONVERTER.structure(item, cl.__args__[0]) for item in items]
 
@@ -94,7 +146,7 @@ class PaginatorInfo(_BaseConverter):
     total: int = None
 
 
-_CONVERTER.register_structure_hook(Paginator, paginator_hook)
+_CONVERTER.register_structure_hook(Paginator, _paginator_hook)
 
 
 @attr.s(auto_attribs=True)

@@ -27,7 +27,7 @@ __all__ = [
     "utils",
     "urls",
     "scrape",
-    "types.py",
+    "types",
     "set_global_key",
     "convert_dict_to_query",
     "get_query",
@@ -97,7 +97,25 @@ __all__ = [
     "land_cost",
     "city_cost",
     "sort_ongoing_wars",
-    "__version__"
+    "__version__",
+    "APIKeyPermissions",
+    "ActivityStat",
+    "Radiation",
+    "TopTradeInfo",
+    "TradePrice",
+    "ResourceStat",
+    "TopTradeResourcesInfo",
+    "Paginator",
+    "BaseConverter",
+    "TreasureTrade",
+    "PaginatorInfo",
+    "BannedNation",
+    "GameInfo",
+    "EmbargoType",
+    "Embargo",
+    "Color",
+    "QueryResponse",
+    "Me"
 ]
 
 
