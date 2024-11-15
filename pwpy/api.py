@@ -33,7 +33,7 @@ import contextlib
 import json
 
 
-_LOGGER = logging.getLogger("pwpy.events")
+_LOGGER = logging.getLogger("pwpy.api")
 
 
 __all__ = [
