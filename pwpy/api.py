@@ -22,7 +22,7 @@
 
 
 from pwpy import errors
-from pwpy.types import QueryResponse, PaginatorInfo
+from pwpy.types import QueryResponse
 
 import typing as t
 import aiohttp
