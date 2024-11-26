@@ -106,7 +106,6 @@ __all__ = [
     "ResourceStat",
     "TopTradeResourcesInfo",
     "Paginator",
-    "BaseConverter",
     "TreasureTrade",
     "PaginatorInfo",
     "BannedNation",

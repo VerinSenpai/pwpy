@@ -46,7 +46,7 @@ __all__ = [
 ]
 
 
-_API_KEY: str | None = None
+_API_KEY: t.Optional[str] = None
 
 
 def set_global_key(api_key: str) -> None:
@@ -55,11 +55,11 @@ def set_global_key(api_key: str) -> None:
     _API_KEY = api_key
 
 
-def _ratelimit(func):
+def _ratelimit(func) -> t.Callable:
     remaining: int = 0
     reset: int = 0
 
-    async def wrapper(*args, **kwargs):
+    async def wrapper(*args, **kwargs) -> dict:
         nonlocal remaining
         nonlocal reset
 
@@ -79,7 +79,7 @@ def _ratelimit(func):
     return wrapper
 
 
-def _parse_model_data_tuple(data: tuple):
+def _parse_model_data_tuple(data: tuple) -> str:
     values = []
 
     for item in data:
@@ -222,7 +222,7 @@ class BulkQuery:
     """
     Build, chunk, and post mass queries.
     """
-    def __init__(self, api_key: str = None, *, chunk_size: int = 10):
+    def __init__(self, api_key: str = None, *, chunk_size: int = 10) -> None:
         """
         :param api_key: A valid Politics And War API key.
         :param chunk_size: The number of queries to send in each payload.
@@ -240,7 +240,7 @@ class BulkQuery:
         self._chunk_size: int = chunk_size
 
     @property
-    def _chunk_requests(self) -> t.Generator:
+    def _chunk_requests(self) -> t.Generator[str]:
         """
         Splits the queries into chunks.
 
@@ -271,7 +271,7 @@ class BulkQuery:
         """
         self._queries.clear()
 
-    async def get(self) -> t.Generator:
+    async def get(self) -> t.Generator[dict, QueryResponse]:
         """
         Post the bulk GQL query, parsing for errors and returning the data.
 
@@ -297,7 +297,7 @@ class Listener:
 
 
 class SocketMonitor:
-    def __init__(self, api_key: str, *, loop: t.Optional[asyncio.BaseEventLoop] = None):
+    def __init__(self, api_key: t.Optional[str] = None, *, loop: t.Optional[asyncio.BaseEventLoop] = None) -> None:
         if loop is None:
             loop = asyncio.get_event_loop()
 
@@ -326,7 +326,7 @@ class SocketMonitor:
         self._listener: t.Optional[asyncio.Task] = None
         self._heartbeat: t.Optional[asyncio.Task] = None
 
-    def _create_task(self, coro: t.Coroutine):
+    def _create_task(self, coro: t.Coroutine) -> None:
         def done_callback(_):
             self._tasks.remove(task)
 
@@ -334,7 +334,7 @@ class SocketMonitor:
         task.add_done_callback(done_callback)
         self._tasks.add(task)
 
-    async def run(self):
+    async def run(self) -> None:
         if self._running:
             raise errors.MonitorStateError("monitor is already running!")
 
@@ -348,7 +348,7 @@ class SocketMonitor:
 
         self._running = True
 
-    async def stop(self):
+    async def stop(self) -> None:
         if not self._running:
             raise errors.MonitorStateError("monitor is not currently running!")
 
@@ -374,7 +374,7 @@ class SocketMonitor:
 
         self._closing.clear()
 
-    async def _connect(self):
+    async def _connect(self) -> None:
         if self._session is None or self._session.closed:
             self._session = aiohttp.ClientSession()
 
@@ -389,7 +389,7 @@ class SocketMonitor:
         )
         self._connected.set()
 
-    async def _reconnect(self, message: bytes = b""):
+    async def _reconnect(self, message: bytes = b"") -> None:
         if self._reconnecting:
             return
 
@@ -408,7 +408,7 @@ class SocketMonitor:
 
         self._reconnecting = False
 
-    async def _maybe_close_socket(self, code: int = 1000, message: bytes = b""):
+    async def _maybe_close_socket(self, code: int = 1000, message: bytes = b"") -> None:
         self._connected.clear()
         self._listening.clear()
 
@@ -418,7 +418,7 @@ class SocketMonitor:
         with contextlib.suppress(ConnectionResetError):
             await self._socket.close(code=code, message=message)
 
-    async def _handle_closed_socket(self):
+    async def _handle_closed_socket(self) -> None:
         self._connected.clear()
         self._listening.clear()
 
@@ -432,7 +432,7 @@ class SocketMonitor:
 
         await self._reconnect()
 
-    async def _handle_message(self, message):
+    async def _handle_message(self, message) -> None:
         if message.type in (aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.CLOSING):
             await self._handle_closed_socket()
 
@@ -473,11 +473,11 @@ class SocketMonitor:
             else:
                 await self._unsubscribe(data["channel"])
 
-    async def _send_message(self, event: str, data: dict = None):
+    async def _send_message(self, event: str, data: dict = None) -> None:
         payload = {"event": event, "data": data or {}}
         await self._socket.send_json(payload)
 
-    async def _listen_for_messages(self):
+    async def _listen_for_messages(self) -> None:
         while True:
             await self._connected.wait()
 
@@ -487,7 +487,7 @@ class SocketMonitor:
             if self._socket.closed:
                 await self._handle_closed_socket()
 
-    async def _ensure_heartbeat(self):
+    async def _ensure_heartbeat(self) -> None:
         while True:
             try:
                 sleep_time = self._last_msg + self._timeout - time.perf_counter()
@@ -522,7 +522,7 @@ class SocketMonitor:
 
                 await asyncio.sleep(self._timeout)
 
-    async def _request_channel(self, listener: Listener):
+    async def _request_channel(self, listener: Listener) -> None:
         url = "https://api.politicsandwar.com/subscriptions/v1/subscribe/{model}/{event}"
         url = url.format(model=listener.model, event=listener.event)
 
@@ -541,7 +541,7 @@ class SocketMonitor:
             except aiohttp.ContentTypeError as exc:
                 raise errors.SubscribeFailed(exc.message) from exc
 
-    async def _authorize_subscribe(self, listener: Listener):
+    async def _authorize_subscribe(self, listener: Listener) -> None:
         payload = {"socket_id": self._socket_id, "channel_name": listener.channel}
 
         async with self._session.post(
@@ -555,7 +555,7 @@ class SocketMonitor:
 
             return data["auth"]
 
-    async def _subscribe(self, listener: Listener):
+    async def _subscribe(self, listener: Listener) -> None:
         if not listener.channel:
             await self._request_channel(listener)
 
@@ -578,7 +578,7 @@ class SocketMonitor:
 
             raise errors.SubscribeFailed()
 
-    async def subscribe(self, listener: Listener):
+    async def subscribe(self, listener: Listener) -> None:
         if self._closing.is_set():
             raise errors.MonitorStateError()
 
@@ -590,15 +590,15 @@ class SocketMonitor:
 
         await self._subscribe(listener)
 
-    async def _unsubscribe(self, channel: str):
+    async def _unsubscribe(self, channel: str) -> None:
         self._listeners.pop(channel, None)
         await self._send_message("pusher:unsubscribe", {"channel": channel})
 
-    async def unsubscribe(self, listener: Listener):
+    async def unsubscribe(self, listener: Listener) -> None:
         await self._unsubscribe(listener.channel)
 
-    def listen(self, model: str, event: str):
-        def decorator(coro: t.Coroutine):
+    def listen(self, model: str, event: str) -> t.Callable:
+        def decorator(coro: t.Coroutine) -> t.Coroutine:
             listener = Listener(coro, model, event)
             self._create_task(self.subscribe(listener))
 
