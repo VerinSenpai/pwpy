@@ -240,7 +240,7 @@ class BulkQuery:
         self._chunk_size: int = chunk_size
 
     @property
-    def _chunk_requests(self) -> t.Generator[str]:
+    def _chunk_requests(self) -> t.Generator:
         """
         Splits the queries into chunks.
 
@@ -271,7 +271,7 @@ class BulkQuery:
         """
         self._queries.clear()
 
-    async def get(self) -> t.Generator[dict, QueryResponse]:
+    async def get(self) -> t.Generator:
         """
         Post the bulk GQL query, parsing for errors and returning the data.
 
